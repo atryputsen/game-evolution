@@ -26,7 +26,6 @@ function Main() {
 
             mapArray[j][i] = 1;
         }
-
         render.drawBarriers(mapInfo.barrier.width, mapInfo.barrier.height, mapArray);
     }
 	function initMap(){
@@ -51,7 +50,7 @@ function Main() {
                 "width": 100
             },
             "levels": [{
-                "barriers": 15,
+                "barriers": 5,
                 "fishes": 1
             }]
         };
@@ -63,9 +62,15 @@ function Main() {
 	function initFishes() {
 		render.initFishLayer();
 
-		var fish = new Fish(Math.round(mapInfo.map.width / 2) - 200, Math.round(mapInfo.map.height / 2), 100, 30, 0);
+		var fish = new Fish(Math.round(mapInfo.map.width / 2) - 200, Math.round(mapInfo.map.height / 2), 100, 50, 0);
+        var fish2 = new Fish(Math.round(mapInfo.map.width / 2) - 400, Math.round(mapInfo.map.height / 2)-50, 100, 50, 40);
+        var fish3 = new Fish(Math.round(mapInfo.map.width / 2) - 200, Math.round(mapInfo.map.height / 2)-200, 100, 50, 90);
 		render.drawFish(fish);
         fishes.push(fish);
+        render.drawFish(fish2);
+        fishes.push(fish2);
+        render.drawFish(fish3);
+        fishes.push(fish3);
 	}
     function initHero() {
         var width = 50,
@@ -80,7 +85,58 @@ function Main() {
         initMap();
 		initFishes();
         initHero();
+        console.log(mapArray)
 	}
+     /*
+    function getMapSector(v) {
+        var midObj = getMidPoint(v)
+        var x = Math.floor((midObj.x - mapInfo.barrier.width/2) / mapInfo.barrier.width);
+        var y = Math.floor((midObj.y - mapInfo.barrier.height/2) / mapInfo.barrier.height);
+        return {
+            x: x,
+            y: y
+        };
+    }
+
+    function getMidPoint( obj )
+    {
+        var maxX = Math.max(obj[0][0],obj[1][0],obj[2][0],obj[3][0]);
+        var minX = Math.min(obj[0][0],obj[1][0],obj[2][0],obj[3][0]);
+        var maxY = Math.max(obj[0][1],obj[1][1],obj[2][1],obj[3][1]);
+        var minY = Math.min(obj[0][1],obj[1][1],obj[2][1],obj[3][1]);
+        var x = Math.abs(minX + (maxX - minX)/2 );
+        var y = Math.abs(minY + (maxY - minY)/2 );
+        return {
+            x: x,
+            y: y
+        };
+    }
+     */
+    function checkCollision(hero) {
+        var matrixCollision = false;
+        for(var j = 0; j < hero.length; j++) {
+            var x = Math.floor(hero[j][0]/ mapInfo.barrier.width);
+            var y = Math.floor(hero[j][1]/ mapInfo.barrier.height);
+            if (mapArray[y][x]){
+                matrixCollision = true;
+                console.log('collision')
+            }
+        }
+
+        var fishCollision = false;
+        for(var i = 0; i < fishes.length; i++) {
+            fishes[i].vertexes = collisionLib.vert.convertSquare( fishes[i] )
+            //console.log(hero)
+            //console.log(fishes[i].vertexes)
+            var collisionSat = collisionLib.vert.sat(hero, fishes[i].vertexes);
+            if (collisionSat) {
+                console.log('collisionSat');
+                fishCollision = true;
+            }
+        }
+
+        return matrixCollision || fishCollision;
+    }
 	
 	this.moveTo = function(clientX, clientY) {
         var wayX, wayY, way,
@@ -104,7 +160,7 @@ function Main() {
             angle += 360;
         }
         deltaSign = (angle - hero.angle > 0) ? 1 : -1;
-
+        var collision;
         var changeAngle = function(){
             if (angle !== hero.angle) {
                 if (Math.abs(angle - hero.angle) > hero.speed){
@@ -113,18 +169,25 @@ function Main() {
                     hero.angle = angle;
                 }
                 render.drawHero(hero);
+                //collision = checkCollision(hero);
+                //if (!collision)
                 animReqHero = requestAnimFrame(changeAngle);
             } else if (step < steps) {
-                 render.drawHero(hero);
+
                  hero.x += deltaX;
                  hero.y += deltaY;
                  step++;
-                 animReqHero = requestAnimFrame(changeAngle);
+                console.log(hero)
+                console.log(fishes[2])
+                render.drawHero(hero);
+                hero.vertexes = collisionLib.vert.convertSquare( hero )
+                collision = checkCollision(hero.vertexes);
+                 if (!collision)
+                    animReqHero = requestAnimFrame(changeAngle);
             } else {
 
             }
         };
-
         animReqHero = requestAnimFrame(changeAngle);
     };
 	this.resize = function() {
@@ -143,7 +206,7 @@ function Fish (){
 		this.angle = arguments[4] || 0;
         this.speed = arguments[5] || 5;
 
-		vertexes = collisionLib.vert.convertSquare(this);
+		this.vertexes = collisionLib.vert.convertSquare(this);
 	}
 
     init.apply(this, arguments);
@@ -158,7 +221,7 @@ function Hero (){
         this.angle = arguments[4] || 0;
         this.speed = arguments[5] || 5;
 
-        vertexes = collisionLib.vert.convertSquare(this);
+        this.vertexes = collisionLib.vert.convertSquare(this);
     }
 
     init.apply(this, arguments);

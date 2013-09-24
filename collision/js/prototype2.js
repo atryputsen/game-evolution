@@ -74,6 +74,8 @@ var Spore = {
 		SporeModel1.draw();
 		//separation axis theorem(SAT)
 		if (this.satDelay) {
+            console.log(SporeModel1);
+            console.log(SporeModel2);
 			var collision = collisionLib.vert.sat(SporeModel1.vertexes, SporeModel2.vertexes);
 			if (collision) {
 				alert('Collision');
@@ -93,7 +95,7 @@ var SporeModel1 = {
 	y: 70,
 	width: 100,
 	height: 30,
-	angle: 68,
+	angle: 168,
 	color: '#f00',
 	alpha: 0.5,
 
@@ -118,11 +120,11 @@ var SporeModel1 = {
 };
 
 var SporeModel2 = {
-	x: 30,
-	y: 30,
+	x: 300,
+	y: 300,
 	width: 50,
 	height: 50,
-	angle: 45,
+	angle: -168,
 	color: '#00f',
 	alpha: 0.5,
 
