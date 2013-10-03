@@ -112,30 +112,30 @@ function Main() {
         };
     }
      */
-    function checkCollision(hero) {
+    function checkCollision(heroVertexs) {
         var matrixCollision = false;
-        for(var j = 0; j < hero.length; j++) {
-            var x = Math.floor(hero[j][0]/ mapInfo.barrier.width);
-            var y = Math.floor(hero[j][1]/ mapInfo.barrier.height);
+        for(var j = 0; j < heroVertexs.length; j++) {
+            var x = Math.floor(heroVertexs[j][0]/ mapInfo.barrier.width);
+            var y = Math.floor(heroVertexs[j][1]/ mapInfo.barrier.height);
             if (mapArray[y][x]){
                 matrixCollision = true;
-                console.log('collision')
+                console.log('collision');
+                return matrixCollision;
             }
         }
 
         var fishCollision = false;
         for(var i = 0; i < fishes.length; i++) {
             fishes[i].vertexes = collisionLib.vert.convertSquare( fishes[i] )
-            //console.log(hero)
-            //console.log(fishes[i].vertexes)
-            var collisionSat = collisionLib.vert.sat(hero, fishes[i].vertexes);
+            var collisionSat = collisionLib.vert.sat(heroVertexs, fishes[i].vertexes);
             if (collisionSat) {
                 console.log('collisionSat');
                 fishCollision = true;
+                return fishCollision;
             }
         }
 
-        return matrixCollision || fishCollision;
+        return false;
     }
 	
 	this.moveTo = function(clientX, clientY) {
@@ -168,24 +168,23 @@ function Main() {
                 } else {
                     hero.angle = angle;
                 }
+
                 render.drawHero(hero);
-                //collision = checkCollision(hero);
-                //if (!collision)
                 animReqHero = requestAnimFrame(changeAngle);
             } else if (step < steps) {
+                var cloneHero = clone(hero);
+                cloneHero.x += deltaX;
+                cloneHero.y += deltaY;
+                step++;
 
-                 hero.x += deltaX;
-                 hero.y += deltaY;
-                 step++;
-                console.log(hero)
-                console.log(fishes[2])
-                render.drawHero(hero);
-                hero.vertexes = collisionLib.vert.convertSquare( hero )
-                collision = checkCollision(hero.vertexes);
-                 if (!collision)
+                cloneHero.vertexes = collisionLib.vert.convertSquare( cloneHero );
+                collision = checkCollision(cloneHero.vertexes);
+                if (!collision) {
+                    hero.x = cloneHero.x;
+                    hero.y = cloneHero.y;
+                    render.drawHero(hero);
                     animReqHero = requestAnimFrame(changeAngle);
-            } else {
-
+                }
             }
         };
         animReqHero = requestAnimFrame(changeAngle);
