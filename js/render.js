@@ -157,8 +157,16 @@ function Render() {
         moveLayer(heroLayer, mapStartX - heroX + heroDimension, mapStartY - heroY + heroDimension, 1);
     }
     function moveLayer(layer, x, y, collapse){
-        layer.canvas.style.top = Math.ceil(-y * collapse) + "px";
-        layer.canvas.style.left = Math.ceil(-x * collapse) + "px";
+        //layer.canvas.style.top = Math.ceil(-y * collapse) + "px";
+        //layer.canvas.style.left = Math.ceil(-x * collapse) + "px";
+        var px= Math.ceil(-y * collapse),
+            py= Math.ceil(-x * collapse);
+
+            layer.canvas.style.webkitTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
+            layer.canvas.style.MozTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
+            layer.canvas.style.msTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
+            layer.canvas.style.OTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
+            layer.canvas.style.transform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
     }
 
     this.resize = function(width, height){
