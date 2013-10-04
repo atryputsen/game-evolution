@@ -73,21 +73,18 @@ collisionLib.vert = {
     },
 
     convertSquare: function(square) {
-        square.center = this.vertex(square.x + (square.width / 2), square.y + (square.height / 2));
+        square.center = this.vertex(square.x, square.y);
 
         // find all vertexes
         var points = [
             // top left vertex
-            this.vertex(square.x, square.y),
-
+            this.vertex(square.x - square.width / 2, square.y - square.height / 2),
             // top right vertex
-            this.vertex(square.x + square.width, square.y),
-
+            this.vertex(square.x + square.width / 2, square.y - square.height / 2),
             // bottom right vertex
-            this.vertex(square.x + square.width, square.y + square.height),
-
+            this.vertex(square.x + square.width / 2, square.y + square.height / 2),
             // bottom left vertex
-            this.vertex(square.x, square.y + square.height)
+            this.vertex(square.x - square.width / 2, square.y + square.height / 2)
         ];
 
         // Rotate
