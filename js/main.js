@@ -4,7 +4,8 @@ function Main() {
         mapArray = [],
         fishes = [],
         hero,
-        animReqHero;
+        animReqHero,
+        animReqFish;
 
     function initBarriers(mapInfo){
         var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
@@ -19,10 +20,20 @@ function Main() {
             }
             mapArray.push(tempArray);
         }
+        var lenW = width-1;
+        var lenH = height-1;
+        for (var j = 0; j < height; j++){
+            mapArray[j][0] = 1;
+            mapArray[j][lenW] = 1;
+            for (var i = 0; i < width; i++){
+                mapArray[0][i] = 1;
+                mapArray[lenH][i] = 1;
+            }
+        }
 
         for (var l = 0; l < count; l++){
-            i = Math.floor(Math.random() * width);
-            j = Math.floor(Math.random() * height);
+            i = Math.floor(Math.random() * (width-1));
+            j = Math.floor(Math.random() * (height-1));
 
             mapArray[j][i] = 1;
         }
@@ -51,7 +62,7 @@ function Main() {
             },
             "levels": [{
                 "barriers": 5,
-                "fishes": 1
+                "fishes": 5
             }]
         };
 
@@ -61,16 +72,13 @@ function Main() {
     }
 	function initFishes() {
 		render.initFishLayer();
-
-		var fish = new Fish(Math.round(mapInfo.map.width / 2) - 200, Math.round(mapInfo.map.height / 2), 100, 50, 0);
-        var fish2 = new Fish(Math.round(mapInfo.map.width / 2) - 400, Math.round(mapInfo.map.height / 2)-50, 100, 50, 40);
-        var fish3 = new Fish(Math.round(mapInfo.map.width / 2) - 200, Math.round(mapInfo.map.height / 2)-200, 100, 50, 90);
-		render.drawFish(fish);
-        fishes.push(fish);
-        render.drawFish(fish2);
-        fishes.push(fish2);
-        render.drawFish(fish3);
-        fishes.push(fish3);
+        var fishesCount = mapInfo.levels[0].fishes;
+        for(var i =0; i < fishesCount; i++) {
+            console.log(i)
+            var fish = new Fish(Math.round(mapInfo.map.width / 2) - 1000*Math.random(), Math.round(mapInfo.map.height / 2)- 1000*Math.random(), 50, 100, 0);
+            render.drawFish(fish);
+            fishes.push(fish);
+        }
 	}
     function initHero() {
         var width = 50,
@@ -87,31 +95,7 @@ function Main() {
         initHero();
         console.log(mapArray)
 	}
-     /*
-    function getMapSector(v) {
-        var midObj = getMidPoint(v)
-        var x = Math.floor((midObj.x - mapInfo.barrier.width/2) / mapInfo.barrier.width);
-        var y = Math.floor((midObj.y - mapInfo.barrier.height/2) / mapInfo.barrier.height);
-        return {
-            x: x,
-            y: y
-        };
-    }
 
-    function getMidPoint( obj )
-    {
-        var maxX = Math.max(obj[0][0],obj[1][0],obj[2][0],obj[3][0]);
-        var minX = Math.min(obj[0][0],obj[1][0],obj[2][0],obj[3][0]);
-        var maxY = Math.max(obj[0][1],obj[1][1],obj[2][1],obj[3][1]);
-        var minY = Math.min(obj[0][1],obj[1][1],obj[2][1],obj[3][1]);
-        var x = Math.abs(minX + (maxX - minX)/2 );
-        var y = Math.abs(minY + (maxY - minY)/2 );
-        return {
-            x: x,
-            y: y
-        };
-    }
-     */
     function checkCollision(heroVertexs) {
         var matrixCollision = false;
         for(var j = 0; j < heroVertexs.length; j++) {
@@ -119,7 +103,7 @@ function Main() {
             var y = Math.floor(heroVertexs[j][1]/ mapInfo.barrier.height);
             if (mapArray[y][x]){
                 matrixCollision = true;
-                console.log('collision');
+                //console.log('collision');
                 return matrixCollision;
             }
         }
@@ -129,7 +113,7 @@ function Main() {
             fishes[i].vertexes = collisionLib.vert.convertSquare( fishes[i] )
             var collisionSat = collisionLib.vert.sat(heroVertexs, fishes[i].vertexes);
             if (collisionSat) {
-                console.log('collisionSat');
+                //console.log('collisionSat');
                 fishCollision = true;
                 return fishCollision;
             }
@@ -137,6 +121,93 @@ function Main() {
 
         return false;
     }
+
+    function checkWallCollision(heroVertexs) {
+        var matrixCollision = false;
+        for(var j = 0; j < heroVertexs.length; j++) {
+            var x = Math.floor(heroVertexs[j][0]/ mapInfo.barrier.width);
+            var y = Math.floor(heroVertexs[j][1]/ mapInfo.barrier.height);
+            if (mapArray[y][x]){
+                matrixCollision = true;
+                //console.log('collision');
+                return matrixCollision;
+            }
+        }
+
+        return false;
+    }
+
+    this.moveToFish = function(clientX, clientY, id) {
+
+        var wayX, wayY, way,
+            deltaX, deltaY,
+            angle, deltaSign,
+            steps, step = 0;
+
+        stopRequestAnimFrame(animReqFish);
+        wayX = clientX - window.innerWidth / 2;
+        wayY = clientY - window.innerHeight / 2;
+
+        way = Math.sqrt(wayX * wayX + wayY * wayY);
+        steps = way / fishes[id].speed;
+
+        deltaX = wayX / steps;
+        deltaY = wayY / steps;
+
+        angle = Math.atan2(wayX, -wayY) * 180 / Math.PI;
+        if (angle - fishes[id].angle > 180) {
+            angle -= 360
+        } else if (angle - fishes[id].angle < -180){
+            angle += 360;
+        }
+        deltaSign = (angle - fishes[id].angle > 0) ? 1 : -1;
+
+        var collision, collisionPart;
+        var changeFishAngle = function(){
+            //console.log(angle)
+            //console.log(fishes[id].angle)
+            if (angle !== fishes[id].angle) {
+                if (Math.abs(angle - fishes[id].angle) > fishes[id].speed){
+                    fishes[id].angle += fishes[id].speed * deltaSign;
+                } else {
+                    fishes[id].angle = angle;
+                }
+                if (fishes[id].parts.length>0) {
+                    for (var i = 0; i < fishes[id].parts.length; i++) {
+                        fishes[id].parts[i].angle = fishes[id].angle;
+                    }
+                }
+                render.drawFishAi(fishes[id]);
+                animReqFish = requestAnimFrame(changeFishAngle);
+            } else if (step < steps) {
+                var cloneHero = clone(fishes[id]);
+                cloneHero.x += deltaX;
+                cloneHero.y += deltaY;
+                step++;
+                //console.log(cloneHero)
+                 if (cloneHero.parts.length>0) {
+                    for (var i = 0; i < cloneHero.parts.length; i++) {
+                        cloneHero.parts[i].x += deltaX;
+                        cloneHero.parts[i].y += deltaY;
+                        cloneHero.parts[i].vertexes = collisionLib.vert.convertSquare( cloneHero.parts[i] );
+                        collisionPart = checkWallCollision(cloneHero.parts[i].vertexes);
+                        if (collisionPart) {
+                            //console.log('collision ' + cloneHero.parts[i].type)
+                        }
+                    };
+                }
+                cloneHero.vertexes = collisionLib.vert.convertSquare( cloneHero );
+                collision = checkWallCollision(cloneHero.vertexes);
+                if (!collision) {
+                    fishes[id].x = cloneHero.x;
+                    fishes[id].y = cloneHero.y;
+                    render.drawFishAi(fishes[id]);
+                    animReqFish = requestAnimFrame(changeFishAngle);
+                }
+            }
+        };
+        animReqHero = requestAnimFrame(changeFishAngle);
+    };
 	
 	this.moveTo = function(clientX, clientY) {
         var wayX, wayY, way,
@@ -160,7 +231,7 @@ function Main() {
             angle += 360;
         }
         deltaSign = (angle - hero.angle > 0) ? 1 : -1;
-        var collision;
+        var collision, collisionPart;
         var changeAngle = function(){
             if (angle !== hero.angle) {
                 if (Math.abs(angle - hero.angle) > hero.speed){
@@ -168,7 +239,11 @@ function Main() {
                 } else {
                     hero.angle = angle;
                 }
-
+                if (hero.parts.length>0) {
+                    for (var i = 0; i < hero.parts.length; i++) {
+                        hero.parts[i].angle = hero.angle;
+                    }
+                }
                 render.drawHero(hero);
                 animReqHero = requestAnimFrame(changeAngle);
             } else if (step < steps) {
@@ -176,7 +251,18 @@ function Main() {
                 cloneHero.x += deltaX;
                 cloneHero.y += deltaY;
                 step++;
-
+                //console.log(cloneHero)
+                if (cloneHero.parts.length>0) {
+                    for (var i = 0; i < cloneHero.parts.length; i++) {
+                        cloneHero.parts[i].x += deltaX;
+                        cloneHero.parts[i].y += deltaY;
+                        cloneHero.parts[i].vertexes = collisionLib.vert.convertSquare( cloneHero.parts[i] );
+                        collisionPart = checkCollision(cloneHero.parts[i].vertexes);
+                        if (collisionPart) {
+                            console.log('collision ' + cloneHero.parts[i].type)
+                        }
+                    };
+                }
                 cloneHero.vertexes = collisionLib.vert.convertSquare( cloneHero );
                 collision = checkCollision(cloneHero.vertexes);
                 if (!collision) {
@@ -204,7 +290,25 @@ function Fish (){
 		this.height = arguments[3] || 30;
 		this.angle = arguments[4] || 0;
         this.speed = arguments[5] || 5;
-
+        this.parts = [];
+        var item = {};
+        item.type = 'mouth';
+        item.width = 20;
+        item.height = 20;
+        item.x = this.x;
+        item.y = this.y-(this.height/2+item.height);
+        item.angle = this.angle;
+        item.speed = this.speed;
+        this.parts.push(item);
+        var item = {};
+        item.type = 'tail';
+        item.width = 20;
+        item.height = 20;
+        item.x = this.x;
+        item.y = this.y+(this.height/2+item.height);
+        item.angle = this.angle;
+        item.speed = this.speed;
+        this.parts.push(item);
 		this.vertexes = collisionLib.vert.convertSquare(this);
 	}
 
@@ -219,7 +323,43 @@ function Hero (){
         this.height = arguments[3] || 30;
         this.angle = arguments[4] || 0;
         this.speed = arguments[5] || 5;
-
+        this.parts = [];
+        var item = {};
+        item.type = 'mouth';
+        item.width = 20;
+        item.height = 20;
+        item.x = this.x;
+        item.y = this.y-(this.height/2+item.height);
+        item.angle = this.angle;
+        item.speed = this.speed;
+        this.parts.push(item);
+        var item = {};
+        item.type = 'tail';
+        item.width = 20;
+        item.height = 20;
+        item.x = this.x;
+        item.y = this.y+(this.height/2+item.height);
+        item.angle = this.angle;
+        item.speed = this.speed;
+        this.parts.push(item);
+        var item = {};
+        item.type = 'fin';
+        item.width = 100;
+        item.height = 20;
+        item.x = this.x;
+        item.y = this.y-item.height;
+        item.angle = this.angle;
+        item.speed = this.speed;
+        this.parts.push(item);
+        var item = {};
+        item.type = 'horn';
+        item.width = 100;
+        item.height = 30;
+        item.x = this.x;
+        item.y = this.y+item.height;
+        item.angle = this.angle;
+        item.speed = this.speed;
+        this.parts.push(item);
         this.vertexes = collisionLib.vert.convertSquare(this);
     }
 

@@ -101,8 +101,33 @@ function Render() {
             totalLayer.translate(-x, -y);
 		}
         totalLayer.fillRect(Math.ceil(x - width/2), Math.ceil(y - height/2), width, height);
+        if (fish.parts.length>0) {
+            for (var i = 0; i < fish.parts.length; i++) {
+                var px, py;
+                if (fish.parts[i].type == 'mouth') {
+                    px = Math.ceil(x - width/2+fish.parts[i].width)
+                    py = Math.ceil(y - height/2-fish.parts[i].height)
+                } else if(fish.parts[i].type == 'tail') {
+                    px = Math.ceil(x - width/2+fish.parts[i].width)
+                    py = Math.ceil(y + height/2)
+                } else if(fish.parts[i].type == 'fin') {
+                    px = Math.ceil(x- width)
+                    py = Math.ceil(y-height/2)
+                } else if(fish.parts[i].type == 'horn') {
+                    px = Math.ceil(x- width)
+                    py = Math.ceil(y)
+                }
+                totalLayer.fillRect(px, py, fish.parts[i].width, fish.parts[i].height);
+            };
+        }
         totalLayer.restore();
 	};
+
+    this.drawFishAi = function(fish) {
+        fishLayer.clearRect(fish.x-100, fish.y-100, 185, 185);
+        this.drawFish(fish, fishLayer);
+    };
+
     this.drawHero = function(fish) {
         var x = fish.x,
             y = fish.y,
