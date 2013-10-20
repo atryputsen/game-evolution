@@ -5,7 +5,7 @@ function Main() {
         fishes = [],
         hero,
         animReqHero,
-        animReqFish;
+        animReqFish = {};
 
     function initBarriers(mapInfo){
         var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
@@ -138,13 +138,12 @@ function Main() {
     }
 
     this.moveToFish = function(clientX, clientY, id) {
-
         var wayX, wayY, way,
             deltaX, deltaY,
             angle, deltaSign,
             steps, step = 0;
 
-        stopRequestAnimFrame(animReqFish);
+        stopRequestAnimFrame(animReqFish[id]);
         wayX = clientX - window.innerWidth / 2;
         wayY = clientY - window.innerHeight / 2;
 
@@ -178,7 +177,7 @@ function Main() {
                     }
                 }
                 render.drawFishAi(fishes[id]);
-                animReqFish = requestAnimFrame(changeFishAngle);
+                animReqFish[id] = requestAnimFrame(changeFishAngle);
             } else if (step < steps) {
                 var cloneHero = clone(fishes[id]);
                 cloneHero.x += deltaX;
@@ -202,11 +201,11 @@ function Main() {
                     fishes[id].x = cloneHero.x;
                     fishes[id].y = cloneHero.y;
                     render.drawFishAi(fishes[id]);
-                    animReqFish = requestAnimFrame(changeFishAngle);
+                    animReqFish[id] = requestAnimFrame(changeFishAngle);
                 }
             }
         };
-        animReqHero = requestAnimFrame(changeFishAngle);
+        animReqFish[id] = requestAnimFrame(changeFishAngle);
     };
 
     function move(wayX, wayY) {
