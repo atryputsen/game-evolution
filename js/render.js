@@ -128,6 +128,10 @@ function Render() {
         this.drawFish(fish, fishLayer);
     };
 
+    this.clearFishLayer = function() {
+        fishLayer.clearRect(0, 0, mapWidth, mapHeight);
+    }
+
     this.drawHero = function(fish) {
         var x = fish.x,
             y = fish.y,

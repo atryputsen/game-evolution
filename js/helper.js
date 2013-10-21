@@ -7,6 +7,7 @@ function clone(obj) {
     return copy;
 }
 
+
 var collisionLib = collisionLib || {};
 
 var _check = {
@@ -20,13 +21,10 @@ var _check = {
                 pointSibling = 0;
 
             }
-            //console.log(shape1[i])
-            //console.log(shape1[pointSibling])
             edge = collisionLib.vert.subtract(shape1[i], shape1[pointSibling]);
 
             // projection to perpendicular line
             perpendicular = collisionLib.vert.vertex(-edge[1], edge[0]);
-            //console.log(perpendicular)
             // find gap between shapes in one coordinate system
             if (this.checkGap(perpendicular, shape1[pointSibling], shape2)) {
                 return false;
@@ -39,21 +37,9 @@ var _check = {
 
     checkGap: function(perpendicular, shape1, shape2) {
         for (j = 0; j < shape2.length; j++) {
-            //console.log(perpendicular[0])
-            //console.log(shape2[j][0])
-            //console.log(shape1[0])
             gapResult = collisionLib.vert.sign(perpendicular[0] * (shape2[j][0] - shape1[0]) + perpendicular[1] * (shape2[j][1] - shape1[1]));
-            //console.log(gapResult)
             // if -1 then no gap
             if (gapResult === -1) {
-                /*
-                console.log(perpendicular[0])
-                console.log(shape2[j][0])
-                console.log(shape1[0])
-                console.log(perpendicular[1])
-                console.log(shape2[j][1])
-                console.log(shape1[1])
-                */
                 return false;
             }
         }

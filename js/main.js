@@ -74,7 +74,6 @@ function Main() {
 		render.initFishLayer();
         var fishesCount = mapInfo.levels[0].fishes;
         for(var i =0; i < fishesCount; i++) {
-            console.log(i)
             var fish = new Fish(Math.round(mapInfo.map.width / 2) - 1000*Math.random(), Math.round(mapInfo.map.height / 2)- 1000*Math.random(), 50, 100, 0);
             render.drawFish(fish);
             fishes.push(fish);
@@ -90,30 +89,20 @@ function Main() {
         render.drawHero(hero);
     }
 	function init() {
+        console.time()
         initMap();
 		initFishes();
         initHero();
-        console.log(mapArray)
 	}
 
     function checkCollision(heroVertexs) {
-        var matrixCollision = false;
-        for(var j = 0; j < heroVertexs.length; j++) {
-            var x = Math.floor(heroVertexs[j][0]/ mapInfo.barrier.width);
-            var y = Math.floor(heroVertexs[j][1]/ mapInfo.barrier.height);
-            if (mapArray[y][x]){
-                matrixCollision = true;
-                //console.log('collision');
-                return matrixCollision;
-            }
-        }
 
         var fishCollision = false;
         for(var i = 0; i < fishes.length; i++) {
             fishes[i].vertexes = collisionLib.vert.convertSquare( fishes[i] )
             var collisionSat = collisionLib.vert.sat(heroVertexs, fishes[i].vertexes);
             if (collisionSat) {
-                //console.log('collisionSat');
+                console.log('collisionSat');
                 fishCollision = true;
                 return fishCollision;
             }
@@ -129,7 +118,7 @@ function Main() {
             var y = Math.floor(heroVertexs[j][1]/ mapInfo.barrier.height);
             if (mapArray[y][x]){
                 matrixCollision = true;
-                //console.log('collision');
+                console.log('collisionWall');
                 return matrixCollision;
             }
         }
@@ -138,7 +127,7 @@ function Main() {
     }
 
     this.moveToFish = function(clientX, clientY, id) {
-
+        //render.clearFishLayer();
         var wayX, wayY, way,
             deltaX, deltaY,
             angle, deltaSign,
@@ -187,8 +176,8 @@ function Main() {
                 //console.log(cloneHero)
                  if (cloneHero.parts.length>0) {
                     for (var i = 0; i < cloneHero.parts.length; i++) {
-                        cloneHero.parts[i].x += deltaX;
-                        cloneHero.parts[i].y += deltaY;
+                        cloneHero.parts[i].x += deltaX*0.05;
+                        cloneHero.parts[i].y += deltaY*0.05;
                         cloneHero.parts[i].vertexes = collisionLib.vert.convertSquare( cloneHero.parts[i] );
                         collisionPart = checkWallCollision(cloneHero.parts[i].vertexes);
                         if (collisionPart) {
@@ -203,6 +192,20 @@ function Main() {
                     fishes[id].y = cloneHero.y;
                     render.drawFishAi(fishes[id]);
                     animReqFish = requestAnimFrame(changeFishAngle);
+                } else {
+                    
+                    
+                    /*
+                    var wallMass = 100;
+                    var fishMass = 1;
+                    var wallSpeed = 0;
+                    var newVelX1 = (fishes[id].speed * (fishMass - wallMass) + 2 * wallMass * wallSpeed)/(fishMass + wallMass);
+                    var newVelY1 = (fishes[id].speed * (fishMass - wallMass) + 2 * wallMass * wallSpeed)/(fishMass + wallMass);
+                    fishes[id].x += -newVelX1*2;
+                    fishes[id].y +=  -newVelY1*2;
+                    render.drawFishAi(fishes[id]);
+                    animReqFish = requestAnimFrame(changeFishAngle);
+                    */
                 }
             }
         };
@@ -210,6 +213,7 @@ function Main() {
     };
 	
 	this.moveTo = function(clientX, clientY) {
+        //console.log(fishes.length)
         var wayX, wayY, way,
             deltaX, deltaY,
             angle, deltaSign,
@@ -231,7 +235,7 @@ function Main() {
             angle += 360;
         }
         deltaSign = (angle - hero.angle > 0) ? 1 : -1;
-        var collision, collisionPart;
+        var collision, collisionPart, wallCollision, wallCollisionPart;
         var changeAngle = function(){
             if (angle !== hero.angle) {
                 if (Math.abs(angle - hero.angle) > hero.speed){
@@ -265,12 +269,36 @@ function Main() {
                 }
                 cloneHero.vertexes = collisionLib.vert.convertSquare( cloneHero );
                 collision = checkCollision(cloneHero.vertexes);
-                if (!collision) {
+                wallCollision = checkWallCollision(cloneHero.vertexes);
+                if (!collision && !wallCollision) {
                     hero.x = cloneHero.x;
                     hero.y = cloneHero.y;
                     render.drawHero(hero);
                     animReqHero = requestAnimFrame(changeAngle);
-                }
+                } /*else {
+                    var wallMass, fishMass, wallSpeed, newVelX1, newVelY1;
+                    if (wallCollision) {
+                        wallMass = 100;
+                        fishMass = 1;
+                        wallSpeed = 0;
+                        newVelX1 = (hero.speed * (fishMass - wallMass) + 2 * wallMass * wallSpeed)/(fishMass + wallMass);
+                        newVelY1 = (hero.speed * (fishMass - wallMass) + 2 * wallMass * wallSpeed)/(fishMass + wallMass);
+                        hero.x = hero.x + newVelX1/10;
+                        hero.y = hero.y + newVelY1/10;
+                        render.drawHero(hero);
+                        animReqHero = requestAnimFrame(changeAngle);
+                    } else {
+                        wallMass = 1;
+                        fishMass = 1;
+                        wallSpeed = 5;
+                        newVelX1 = (hero.speed * (fishMass - wallMass) + 2 * wallMass * wallSpeed)/(fishMass + wallMass);
+                        newVelY1 = (hero.speed * (fishMass - wallMass) + 2 * wallMass * wallSpeed)/(fishMass + wallMass);
+                        hero.x = hero.x + newVelX1/10;
+                        hero.y = hero.y + newVelY1/10;
+                        render.drawHero(hero);
+                        animReqHero = requestAnimFrame(changeAngle);
+                    }
+                }*/
             }
         };
         animReqHero = requestAnimFrame(changeAngle);
