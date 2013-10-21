@@ -118,7 +118,7 @@ function Render() {
                     py = Math.ceil(y)
                 }
                 totalLayer.fillRect(px, py, fish.parts[i].width, fish.parts[i].height);
-            };
+            }
         }
         totalLayer.restore();
 	};
@@ -127,7 +127,6 @@ function Render() {
         fishLayer.clearRect(fish.x-100, fish.y-100, 185, 185);
         this.drawFish(fish, fishLayer);
     };
-
     this.drawHero = function(fish) {
         var x = fish.x,
             y = fish.y,
@@ -142,6 +141,21 @@ function Render() {
         this.drawFish(heroClone, heroLayer);
 
         moveLayers(x, y, halfDimension);
+    };
+
+    this.positionHeroOnScreen = function(hero){
+        return {
+            x: (hero.x < centerViewportX) ?
+                    hero.x :
+                    ((hero.x > mapWidth - centerViewportX) ?
+                        (viewportWidth - (mapWidth - hero.x)) :
+                        centerViewportX),
+            y: (hero.y < centerViewportY) ?
+                hero.y :
+                ((hero.y > mapHeight - centerViewportY) ?
+                    (viewportHeight - (mapHeight - hero.y)) :
+                    centerViewportY)
+        };
     };
 
     function init() {
@@ -182,16 +196,18 @@ function Render() {
         moveLayer(heroLayer, mapStartX - heroX + heroDimension, mapStartY - heroY + heroDimension, 1);
     }
     function moveLayer(layer, x, y, collapse){
-        //layer.canvas.style.top = Math.ceil(-y * collapse) + "px";
-        //layer.canvas.style.left = Math.ceil(-x * collapse) + "px";
-        var px= Math.ceil(-y * collapse),
-            py= Math.ceil(-x * collapse);
+        var deltaY = Math.ceil(-y * collapse),
+            deltaX = Math.ceil(-x * collapse),
+            elementStyle = layer.canvas.style,
+            transformValue = 'matrix(1, 0, 0, 1, ' + deltaX + ', ' + deltaY + ')';
 
-            layer.canvas.style.webkitTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
-            layer.canvas.style.MozTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
-            layer.canvas.style.msTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
-            layer.canvas.style.OTransform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
-            layer.canvas.style.transform = 'matrix(1, 0, 0, 1, '+ py+', '+ px+')';
+        //elementStyle.top = deltaY + "px";
+        //elementStyle.left = deltaX + "px";
+        elementStyle.webkitTransform = transformValue;
+        elementStyle.MozTransform = transformValue;
+        elementStyle.msTransform = transformValue;
+        elementStyle.OTransform = transformValue;
+        elementStyle.transform = transformValue;
     }
 
     this.resize = function(width, height){

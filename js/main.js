@@ -5,7 +5,7 @@ function Main() {
         fishes = [],
         hero,
         animReqHero,
-        animReqFish;
+        animReqFish = {};
 
     function initBarriers(mapInfo){
         var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
@@ -138,13 +138,12 @@ function Main() {
     }
 
     this.moveToFish = function(clientX, clientY, id) {
-
         var wayX, wayY, way,
             deltaX, deltaY,
             angle, deltaSign,
             steps, step = 0;
 
-        stopRequestAnimFrame(animReqFish);
+        stopRequestAnimFrame(animReqFish[id]);
         wayX = clientX - window.innerWidth / 2;
         wayY = clientY - window.innerHeight / 2;
 
@@ -178,7 +177,7 @@ function Main() {
                     }
                 }
                 render.drawFishAi(fishes[id]);
-                animReqFish = requestAnimFrame(changeFishAngle);
+                animReqFish[id] = requestAnimFrame(changeFishAngle);
             } else if (step < steps) {
                 var cloneHero = clone(fishes[id]);
                 cloneHero.x += deltaX;
@@ -202,22 +201,19 @@ function Main() {
                     fishes[id].x = cloneHero.x;
                     fishes[id].y = cloneHero.y;
                     render.drawFishAi(fishes[id]);
-                    animReqFish = requestAnimFrame(changeFishAngle);
+                    animReqFish[id] = requestAnimFrame(changeFishAngle);
                 }
             }
         };
-        animReqHero = requestAnimFrame(changeFishAngle);
+        animReqFish[id] = requestAnimFrame(changeFishAngle);
     };
-	
-	this.moveTo = function(clientX, clientY) {
-        var wayX, wayY, way,
+
+    function move(wayX, wayY) {
+        var way,
             deltaX, deltaY,
             angle, deltaSign,
             steps, step = 0;
 
-        stopRequestAnimFrame(animReqHero);
-        wayX = clientX - window.innerWidth / 2;
-        wayY = clientY - window.innerHeight / 2;
         way = Math.sqrt(wayX * wayX + wayY * wayY);
         steps = way / hero.speed;
 
@@ -261,7 +257,7 @@ function Main() {
                         if (collisionPart) {
                             console.log('collision ' + cloneHero.parts[i].type)
                         }
-                    };
+                    }
                 }
                 cloneHero.vertexes = collisionLib.vert.convertSquare( cloneHero );
                 collision = checkCollision(cloneHero.vertexes);
@@ -274,12 +270,53 @@ function Main() {
             }
         };
         animReqHero = requestAnimFrame(changeAngle);
+    }
+
+    this.moveDirection = function(direction) {
+        stopRequestAnimFrame(animReqHero);
+        switch (direction) {
+            case enums.direction.down:
+                move(0, hero.speed * 10);
+                break;
+            case enums.direction.left:
+                move(-hero.speed * 10, 0);
+                break;
+            case enums.direction.right:
+                move(hero.speed * 10, 0);
+                break;
+            case enums.direction.top:
+                move(0, -hero.speed * 10);
+                break;
+            case enums.direction.leftAndBottom:
+                move(-hero.speed * 10, hero.speed * 10);
+                break;
+            case enums.direction.leftAndTop:
+                move(-hero.speed * 10, -hero.speed * 10);
+                break;
+            case enums.direction.rightAndBottom:
+                move(hero.speed * 10, hero.speed * 10);
+                break;
+            case enums.direction.rightAndTop:
+                move(hero.speed * 10, -hero.speed * 10);
+                break;
+        }
     };
-	this.resize = function() {
+    this.moveTo = function(clientX, clientY) {
+        var wayX, wayY,
+            position;
+
+        position = render.positionHeroOnScreen(hero);
+        wayX = clientX - position.x;
+        wayY = clientY - position.y;
+        stopRequestAnimFrame(animReqHero);
+        move(wayX, wayY);
+    };
+
+    this.resize = function() {
         render.resize(window.innerWidth, window.innerHeight);
     };
 
-	init();
+    init();
 }
 
 function Fish (){
