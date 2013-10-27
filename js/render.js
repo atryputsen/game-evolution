@@ -90,21 +90,30 @@ function Render() {
             width = fish.width,
             height = fish.height,
             angle = fish.angle,
-            totalLayer = layer || fishLayer;
+            totalLayer = layer || fishLayer,
+            pattern;
 
         totalLayer.save();
-        totalLayer.globalAlpha = 0.5;
-        totalLayer.fillStyle = "red";
+        pattern = totalLayer.createPattern(fish.image, 'repeat');
+        totalLayer.fillStyle = pattern;
 		if (angle !== 0) {
             totalLayer.translate(x, y);
             totalLayer.rotate(angle * (Math.PI / 180));
             totalLayer.translate(-x, -y);
 		}
-        totalLayer.fillRect(Math.ceil(x - width/2), Math.ceil(y - height/2), width, height);
+
         totalLayer.translate(x, y);
         for (var i = 0; i < fish.parts.length; i++) {
             totalLayer.drawImage(fish.parts[i].image, fish.parts[i].x, fish.parts[i].y, fish.parts[i].width, fish.parts[i].height);
         }
+
+        totalLayer.save();
+        totalLayer.scale(1, height / width);
+        totalLayer.beginPath();
+        totalLayer.arc(0, 0, width / 2, 0, 2 * Math.PI, false);
+        totalLayer.fill();
+        totalLayer.restore();
+
         totalLayer.restore();
 	};
 

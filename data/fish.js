@@ -19,7 +19,7 @@ var fishInfoGlobal = {
         {
             "width": 30,
             "height": 30,
-            "body": 2,
+            "body": 1,
             "mouth": 2,
             "tail": 1,
             "fin": 1,
@@ -42,7 +42,7 @@ var fishInfoGlobal = {
         {
             "width": 30,
             "height": 30,
-            "body": 2,
+            "body": 1,
             "mouth": 2,
             "tail": 1,
             "fin": 1,

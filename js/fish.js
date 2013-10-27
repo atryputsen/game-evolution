@@ -1,5 +1,5 @@
 function Fish (){
-	this.init = function(x, y, fishInfo) {
+    this.init = function(x, y, fishInfo) {
         var speed = 5;
 
 		this.x = x;
@@ -15,6 +15,11 @@ function Fish (){
                 item, itemLeft, itemRight, tempX, tempY;
 
             item = constructorInfoGlobal[partName][partId];
+
+            if (partName === 'body'){
+                this.image = new Image();
+                this.image.src = item.src;
+            }
 
             if (item) {
                 switch (partName) {
@@ -45,11 +50,11 @@ function Fish (){
                         tempY = Math.floor(this.height / 2);
                         break;
                     case 'fin':
-                        tempX = Math.floor(this.width / 2);
+                        tempX = Math.floor(this.width / 2 - 5);
                         tempY = 0;
                         break;
                     case 'horn':
-                        tempX = Math.floor(this.width / 2);
+                        tempX = Math.floor(this.width / 2 - 10);
                         tempY = Math.ceil(- this.height * 4 / 10);
                         break;
                     }
