@@ -19,9 +19,12 @@ var stopRequestAnimFrame = (function() {
 
 function Render() {
 	var container,
+        options,
+        backgroundLayer,
         mapLayer,
 		fishLayer,
-        heroLayer;
+        heroLayer,
+        effectsLayer;
 
     var mapWidth, mapHeight,
         viewportWidth, viewportHeight,
@@ -67,19 +70,47 @@ function Render() {
 
         heroLayer = ctx;
     };
+    this.initBackground = function(){
+        var canvas, ctx, img, pattern;
+
+        canvas = document.createElement("canvas");
+        canvas.id = "backgroundLayer";
+        canvas.height = mapHeight;// viewportHeight - (mapHeight - viewportHeight) * options.footerRelativeSize;
+        canvas.width = mapWidth;// viewportWidth + (mapWidth - viewportWidth) * options.footerRelativeSize ;
+        container.appendChild(canvas);
+
+        ctx = canvas.getContext("2d");
+        img = new Image();
+        img.src = options.backgroundImg;
+        img.onload = function(){
+            pattern = ctx.createPattern(img, "repeat");
+            ctx.fillStyle = pattern;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        };
+
+        backgroundLayer = ctx;
+    };
 
     this.drawBarriers = function(widthBarrier, heightBarrier, mapArray) {
+        var img, pattern;
+
         if (mapLayer) {
-            mapLayer.save();
-            mapLayer.fillStyle = "black";
-            for (var j = 0; j < mapArray.length; j++){
-                for (var i = 0; i < mapArray[0].length; i++){
-                    if (mapArray[j][i]){
-                        mapLayer.fillRect(i * widthBarrier, j * heightBarrier, widthBarrier, heightBarrier);
+            img = new Image();
+            img.src = options.barrierImg;
+            img.onload = function() {
+                pattern = mapLayer.createPattern(img, 'repeat');
+
+                mapLayer.save();
+                mapLayer.fillStyle = pattern;
+                for (var j = 0; j < mapArray.length; j++){
+                    for (var i = 0; i < mapArray[0].length; i++){
+                        if (mapArray[j][i]){
+                            mapLayer.fillRect(i * widthBarrier, j * heightBarrier, widthBarrier, heightBarrier);
+                        }
                     }
                 }
+                mapLayer.restore();
             }
-            mapLayer.restore();
         } else {
             alert("Couldn't create barriers")
         }
@@ -159,6 +190,7 @@ function Render() {
         viewportHeight = arguments[3];
         centerViewportX = Math.ceil(viewportWidth / 2);
         centerViewportY = Math.ceil(viewportHeight / 2);
+        options = arguments[4];
 
         container = document.getElementById("container");
     }
@@ -186,12 +218,14 @@ function Render() {
         }
 
         moveLayer(mapLayer, mapStartX, mapStartY, 1);
+        moveLayer(backgroundLayer, mapStartX, mapStartY, options.footerRelativeSize);
+        //moveLayer(effectsLayer, mapStartX, mapStartY, options.effectsRelativeSize);
         moveLayer(fishLayer, mapStartX, mapStartY, 1);
         moveLayer(heroLayer, mapStartX - heroX + heroDimension, mapStartY - heroY + heroDimension, 1);
     }
-    function moveLayer(layer, x, y, collapse){
-        var deltaY = Math.ceil(-y * collapse),
-            deltaX = Math.ceil(-x * collapse),
+    function moveLayer(layer, x, y, parallax){
+        var deltaY = Math.ceil(-y * parallax),
+            deltaX = Math.ceil(-x * parallax),
             elementStyle = layer.canvas.style,
             transformValue = 'matrix(1, 0, 0, 1, ' + deltaX + ', ' + deltaY + ')';
 

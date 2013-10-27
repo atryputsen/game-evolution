@@ -7,7 +7,7 @@ function Main() {
         animReqHero,
         animReqFish = {};
 
-    function initBarriers(mapInfo){
+    function initBarriers(){
         var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
             width = Math.floor(mapInfo.map.width / mapInfo.barrier.width),
             percentage = mapInfo.levels[0].barriers,
@@ -38,56 +38,51 @@ function Main() {
 
             mapArray[j][i] = 1;
         }
-        render.drawBarriers(mapInfo.barrier.width, mapInfo.barrier.height, mapArray);
-    }
-	function initMap(){
-		/*var request = new XMLHttpRequest();
-		
-		request.open("GET", "data/map.json", false);
-        request.setRequestHeader("Pragma", "no-cache");
-        request.send();
-		
-		if (request.status === 200) {
-			mapInfo = JSON.parse(request.responseText);
-		} else {
-			alert("Error while try to get data");
-		}*/
-        mapInfo = mapInfoGlobal;
-
-        render = new Render(mapInfo.map.width, mapInfo.map.height, window.innerWidth, window.innerHeight);
-        render.initMapLayer();
-        initBarriers(mapInfo);
     }
 	function initFishes() {
-		render.initFishLayer();
-        var fishesCount = mapInfo.levels[0].fishes;
+		var fishesCount = mapInfo.levels[0].fishes;
         for(var i = 0; i < fishesCount; i++) {
             var fish = new Fish(
                 Math.round(mapInfo.map.width / 2) - 1000 * Math.random(),
                 Math.round(mapInfo.map.height / 2) - 1000 * Math.random(),
                 fishInfoGlobal.fishes[i]
             );
-            render.drawFish(fish);
             fishes.push(fish);
         }
 	}
     function initHero() {
-        var width = 50,
-            height = 100;
-
-        render.initHeroLayer(width, height);
-
         hero = new Fish(
             Math.round(mapInfo.map.width / 2),
             Math.round(mapInfo.map.height / 2),
             fishInfoGlobal.hero
         );
+    }
+    function renderAll(){
+        render = new Render(mapInfo.map.width, mapInfo.map.height, window.innerWidth, window.innerHeight, {
+            backgroundImg: mapInfo.map.src,
+            barrierImg: mapInfo.barrier.src,
+            footerRelativeSize: mapInfo.parallax.footer,
+            effectsRelativeSize: mapInfo.parallax.effects
+        });
+        render.initBackground();
+        render.initMapLayer();
+        render.initFishLayer();
+        render.initHeroLayer(hero.width, hero.height);
+        //render.initEffects();
+
+        render.drawBarriers(mapInfo.barrier.width, mapInfo.barrier.height, mapArray);
+        for (var i = 0; i < fishes.length; i++) {
+            render.drawFish(fishes[i]);
+        }
         render.drawHero(hero);
     }
 	function init() {
-        initMap();
+        mapInfo = mapInfoGlobal;
+        initBarriers();
 		initFishes();
         initHero();
+
+        renderAll();
 	}
 
     function checkCollision(vertexs, fish) {
