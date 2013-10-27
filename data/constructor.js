@@ -8,13 +8,13 @@ var constructorInfoGlobal = {
     ],
     "body": [
         {
-            "src": "img/bg/1.png"
+            "src": "data/img/bg/1.png"
         },
         {
-            "src": "img/bg/2.png"
+            "src": "data/img/bg/2.png"
         },
         {
-            "src": "img/bg/3.png"
+            "src": "data/img/bg/3.png"
         }
     ],
     "mouth": [
