@@ -1,4 +1,4 @@
-{
+var mapInfoGlobal = {
 	"map" : {
         "height": 2000,
         "width": 3000
@@ -8,7 +8,7 @@
         "width": 100
     },
 	"levels": [{
-		"barriers": 15,
-		"fishes": 1
+		"barriers": 5,
+		"fishes": 5
 	}]
-}
+};

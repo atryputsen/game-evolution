@@ -57,7 +57,7 @@
             var x = Math.floor(Math.random() * 1000),
                 y = Math.floor(Math.random() * 1000);
 
-            app.moveToFish(x, y, i);
+            app.moveTo(x, y, i);
         }
     }
 })();
