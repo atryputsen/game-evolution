@@ -3,7 +3,8 @@
         keys = {};
 
     window.onload = function(){
-        app = new Main();
+        document.getElementById('customization').innerHTML = 'test';
+            app = new Main();
         setInterval(loop, 3000);
     };
 
@@ -51,6 +52,13 @@
 
         app.moveTo(x, y);
     };
+
+    window.ondevicemotion = function(event) {
+        var x = event.accelerationIncludingGravity.x * 5;
+        var y = event.accelerationIncludingGravity.y * 5;
+        document.getElementById('customization').innerHTML = '<b>gamma = </b>'+event.rotationRate.beta + ' <b>beta = </b>' + event.rotationRate.gamma+ ' <b>x = </b>' + x+ ' <b>y = </b>' + y;
+        app.moveTo(x, y);
+    } ;
 
     function loop() {
         for (var i = 0; i < 5; i++) {

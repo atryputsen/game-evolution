@@ -76,10 +76,20 @@ function Main() {
         for(var i =0; i < fishesCount; i++) {
             console.log(i)
             var fish = new Fish(Math.round(mapInfo.map.width / 2) - 1000*Math.random(), Math.round(mapInfo.map.height / 2)- 1000*Math.random(), 50, 100, 0);
+            checkFish(fish)
             render.drawFish(fish);
             fishes.push(fish);
         }
 	}
+
+    function checkFish(fish) {
+        if (checkWallCollision(fish.vertexes)) {
+            fish = new Fish(Math.round(mapInfo.map.width / 2) - 1000*Math.random(), Math.round(mapInfo.map.height / 2)- 1000*Math.random(), 50, 100, 0);
+            checkFish(fish)
+        }
+        return fish;
+    }
+
     function initHero() {
         var width = 50,
             height = 100;
