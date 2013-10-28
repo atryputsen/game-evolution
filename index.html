@@ -4,55 +4,109 @@
 		<meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 		<title>Game Evolution</title>
+
+        <script src="data/map.js"></script>
+        <script src="data/constructor.js"></script>
+        <script src="data/fish.js"></script>
+
         <script src="js/enums.js"></script>
-		<script src="js/index.js"></script>
+        <script src="js/customization.js"></script>
+        <script src="js/fish.js"></script>
+        <script src="js/index.js"></script>
         <script src="js/helper.js"></script>
         <script src="js/main.js"></script>
 		<script src="js/render.js"></script>
+
         <style>
             * {
-                height:100%;
                 overflow:hidden;
                 margin:0; padding:0;
+                box-sizing: border-box;
             }
-            canvas {
-                height:auto;
-                position:absolute;
-                top:0; left:0;
-                background:transparent;
+            body > * {
+                height:100%;
             }
-            #mapLayer {
-                border: 1px #000 solid;
+            .hidden {
+                display:none;
             }
+
+            /* Customization section style */
+            #customization > * {
+                display:inline-block;
+            }
+            #customization canvas {
+                width:50%; height:100%;
+            }
+            #customization > ul {
+                width:49%;
+                vertical-align: top;
+            }
+            #customization ul {
+                padding:10px;
+            }
+            #customization ul ul li {
+                display: inline-block;
+                width:100px;
+                padding:10px;
+                margin-right:10px;
+                border:1px solid transparent;
+                text-align: center;
+            }
+            #customization ul ul li:hover {
+                border-color:lightslategrey;
+                cursor:pointer;
+            }
+            #customization ul ul li.selected {
+                border-color:crimson;
+            }
+            #customization img + img {
+                padding-left:10px;
+            }
+            #customization button {
+                width:100%;
+                margin-top:10px;
+                padding:5px 0;
+            }
+
+            /* Map section style */
             #container {
                 backface-visibility:hidden;
                 -webkit-backface-visibility:hidden; /* Chrome and Safari */
                 -moz-backface-visibility:hidden; /* Firefox */
                 -ms-backface-visibility:hidden; /* Internet Explorer */
             }
+            #container canvas {
+                height:auto;
+                position:absolute;
+                top:0; left:0;
+                background:transparent;
+            }
         </style>
 	</head>
 	<body>
         <div id="customization">
-            <canvas width="50%" height="50%"></canvas>
+            <canvas></canvas>
             <ul>
                 <li>
-                    <ul id="bodies"></ul>
+                    <ul id="body"></ul>
                 </li>
                 <li>
-                    <ul id="mouths"></ul>
+                    <ul id="mouth"></ul>
                 </li>
                 <li>
-                    <ul id="horns"></ul>
+                    <ul id="horn"></ul>
                 </li>
                 <li>
-                    <ul id="fins"></ul>
+                    <ul id="fin"></ul>
                 </li>
                 <li>
-                    <ul id="tails"></ul>
+                    <ul id="tail"></ul>
+                </li>
+                <li>
+                    <button>Apply</button>
                 </li>
             </ul>
         </div>
-        <div id="container"></div>
+        <div id="container" class="hidden"></div>
 	</body>
 </html>

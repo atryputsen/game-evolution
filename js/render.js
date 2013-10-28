@@ -1,5 +1,5 @@
 var requestAnimFrame = (function(callback) {
-	return window.requestAnimationFrame || 
+    return window.requestAnimationFrame ||
 		window.webkitRequestAnimationFrame || 
 		window.mozRequestAnimationFrame || 
 		window.oRequestAnimationFrame || 
@@ -19,9 +19,12 @@ var stopRequestAnimFrame = (function() {
 
 function Render() {
 	var container,
+        options,
+        backgroundLayer,
         mapLayer,
 		fishLayer,
-        heroLayer;
+        heroLayer,
+        effectsLayer;
 
     var mapWidth, mapHeight,
         viewportWidth, viewportHeight,
@@ -67,19 +70,47 @@ function Render() {
 
         heroLayer = ctx;
     };
+    this.initBackground = function(){
+        var canvas, ctx, img, pattern;
+
+        canvas = document.createElement("canvas");
+        canvas.id = "backgroundLayer";
+        canvas.height = mapHeight;// viewportHeight - (mapHeight - viewportHeight) * options.footerRelativeSize;
+        canvas.width = mapWidth;// viewportWidth + (mapWidth - viewportWidth) * options.footerRelativeSize ;
+        container.appendChild(canvas);
+
+        ctx = canvas.getContext("2d");
+        img = new Image();
+        img.src = options.backgroundImg;
+        img.onload = function(){
+            pattern = ctx.createPattern(img, "repeat");
+            ctx.fillStyle = pattern;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        };
+
+        backgroundLayer = ctx;
+    };
 
     this.drawBarriers = function(widthBarrier, heightBarrier, mapArray) {
+        var img, pattern;
+
         if (mapLayer) {
-            mapLayer.save();
-            mapLayer.fillStyle = "black";
-            for (var j = 0; j < mapArray.length; j++){
-                for (var i = 0; i < mapArray[0].length; i++){
-                    if (mapArray[j][i]){
-                        mapLayer.fillRect(i * widthBarrier, j * heightBarrier, widthBarrier, heightBarrier);
+            img = new Image();
+            img.src = options.barrierImg;
+            img.onload = function() {
+                pattern = mapLayer.createPattern(img, 'repeat');
+
+                mapLayer.save();
+                mapLayer.fillStyle = pattern;
+                for (var j = 0; j < mapArray.length; j++){
+                    for (var i = 0; i < mapArray[0].length; i++){
+                        if (mapArray[j][i]){
+                            mapLayer.fillRect(i * widthBarrier, j * heightBarrier, widthBarrier, heightBarrier);
+                        }
                     }
                 }
+                mapLayer.restore();
             }
-            mapLayer.restore();
         } else {
             alert("Couldn't create barriers")
         }
@@ -90,36 +121,30 @@ function Render() {
             width = fish.width,
             height = fish.height,
             angle = fish.angle,
-            totalLayer = layer || fishLayer;
+            totalLayer = layer || fishLayer,
+            pattern;
 
         totalLayer.save();
-        totalLayer.globalAlpha = 0.5;
-        totalLayer.fillStyle = "red";
+        pattern = totalLayer.createPattern(fish.image, 'repeat');
+        totalLayer.fillStyle = pattern;
 		if (angle !== 0) {
             totalLayer.translate(x, y);
             totalLayer.rotate(angle * (Math.PI / 180));
             totalLayer.translate(-x, -y);
 		}
-        totalLayer.fillRect(Math.ceil(x - width/2), Math.ceil(y - height/2), width, height);
-        if (fish.parts.length>0) {
-            for (var i = 0; i < fish.parts.length; i++) {
-                var px, py;
-                if (fish.parts[i].type == 'mouth') {
-                    px = Math.ceil(x - width/2+fish.parts[i].width)
-                    py = Math.ceil(y - height/2-fish.parts[i].height)
-                } else if(fish.parts[i].type == 'tail') {
-                    px = Math.ceil(x - width/2+fish.parts[i].width)
-                    py = Math.ceil(y + height/2)
-                } else if(fish.parts[i].type == 'fin') {
-                    px = Math.ceil(x- width)
-                    py = Math.ceil(y-height/2)
-                } else if(fish.parts[i].type == 'horn') {
-                    px = Math.ceil(x- width)
-                    py = Math.ceil(y)
-                }
-                totalLayer.fillRect(px, py, fish.parts[i].width, fish.parts[i].height);
-            }
+
+        totalLayer.translate(x, y);
+        for (var i = 0; i < fish.parts.length; i++) {
+            totalLayer.drawImage(fish.parts[i].image, fish.parts[i].x, fish.parts[i].y, fish.parts[i].width, fish.parts[i].height);
         }
+
+        totalLayer.save();
+        totalLayer.scale(1, height / width);
+        totalLayer.beginPath();
+        totalLayer.arc(0, 0, width / 2, 0, 2 * Math.PI, false);
+        totalLayer.fill();
+        totalLayer.restore();
+
         totalLayer.restore();
 	};
 
@@ -165,6 +190,7 @@ function Render() {
         viewportHeight = arguments[3];
         centerViewportX = Math.ceil(viewportWidth / 2);
         centerViewportY = Math.ceil(viewportHeight / 2);
+        options = arguments[4];
 
         container = document.getElementById("container");
     }
@@ -192,12 +218,14 @@ function Render() {
         }
 
         moveLayer(mapLayer, mapStartX, mapStartY, 1);
+        moveLayer(backgroundLayer, mapStartX, mapStartY, options.footerRelativeSize);
+        //moveLayer(effectsLayer, mapStartX, mapStartY, options.effectsRelativeSize);
         moveLayer(fishLayer, mapStartX, mapStartY, 1);
         moveLayer(heroLayer, mapStartX - heroX + heroDimension, mapStartY - heroY + heroDimension, 1);
     }
-    function moveLayer(layer, x, y, collapse){
-        var deltaY = Math.ceil(-y * collapse),
-            deltaX = Math.ceil(-x * collapse),
+    function moveLayer(layer, x, y, parallax){
+        var deltaY = Math.ceil(-y * parallax),
+            deltaX = Math.ceil(-x * parallax),
             elementStyle = layer.canvas.style,
             transformValue = 'matrix(1, 0, 0, 1, ' + deltaX + ', ' + deltaY + ')';
 
