@@ -68,7 +68,7 @@ function Main() {
         render.initMapLayer();
         render.initFishLayer();
         render.initHeroLayer(hero.width, hero.height);
-        //render.initEffects();
+        render.initEffectLayer();
 
         render.drawBarriers(mapInfo.barrier.width, mapInfo.barrier.height, mapArray);
         for (var i = 0; i < fishes.length; i++) {
@@ -178,6 +178,10 @@ function Main() {
                     fish.y = cloneFish.y;
                     drawFunction.call(render, fish);
                     animReq = requestAnimFrame(doMove);
+                }
+
+                if (step % 50 === 0){
+                    render.effect(fish.x, fish.y);
                 }
 
                 step++;

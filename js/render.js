@@ -75,8 +75,8 @@ function Render() {
 
         canvas = document.createElement("canvas");
         canvas.id = "backgroundLayer";
-        canvas.height = mapHeight;// viewportHeight - (mapHeight - viewportHeight) * options.footerRelativeSize;
-        canvas.width = mapWidth;// viewportWidth + (mapWidth - viewportWidth) * options.footerRelativeSize ;
+        canvas.height = viewportHeight + (mapHeight - viewportHeight) * options.footerRelativeSize;
+        canvas.width = viewportWidth + (mapWidth - viewportWidth) * options.footerRelativeSize;
         container.appendChild(canvas);
 
         ctx = canvas.getContext("2d");
@@ -89,6 +89,21 @@ function Render() {
         };
 
         backgroundLayer = ctx;
+    };
+    this.initEffectLayer = function(){
+        var canvas, ctx;
+
+        canvas = document.createElement("canvas");
+        canvas.id = "effectLayer";
+        canvas.height = viewportHeight + (mapHeight - viewportHeight) * options.effectsRelativeSize;
+        canvas.width = viewportWidth + (mapWidth - viewportWidth) * options.effectsRelativeSize;
+        container.appendChild(canvas);
+
+        ctx = canvas.getContext("2d");
+        ctx.strokeStyle = 'black';
+        ctx.shadowColor = 'white';
+        ctx.shadowBlur = 5;
+        effectsLayer = ctx;
     };
 
     this.drawBarriers = function(widthBarrier, heightBarrier, mapArray) {
@@ -183,6 +198,26 @@ function Render() {
         };
     };
 
+    this.effect = function (x, y){
+        var maxParallax = options.effectsRelativeSize,
+            steps = 5,
+            delta = maxParallax / steps,
+            parallax = 1;
+
+        var drawEffect = function() {
+            effectsLayer.beginPath();
+            effectsLayer.arc(x * parallax, y * parallax, 5 * parallax, 0, 2 * Math.PI, false);
+            effectsLayer.stroke();
+
+            if (parallax <= maxParallax) {
+                parallax += delta;
+                requestAnimFrame(drawEffect);
+            }
+        };
+
+        requestAnimFrame(drawEffect);
+    };
+
     function init() {
         mapWidth = arguments[0];
         mapHeight = arguments[1];
@@ -219,7 +254,7 @@ function Render() {
 
         moveLayer(mapLayer, mapStartX, mapStartY, 1);
         moveLayer(backgroundLayer, mapStartX, mapStartY, options.footerRelativeSize);
-        //moveLayer(effectsLayer, mapStartX, mapStartY, options.effectsRelativeSize);
+        moveLayer(effectsLayer, mapStartX, mapStartY, options.effectsRelativeSize);
         moveLayer(fishLayer, mapStartX, mapStartY, 1);
         moveLayer(heroLayer, mapStartX - heroX + heroDimension, mapStartY - heroY + heroDimension, 1);
     }
@@ -229,8 +264,8 @@ function Render() {
             elementStyle = layer.canvas.style,
             transformValue = 'matrix(1, 0, 0, 1, ' + deltaX + ', ' + deltaY + ')';
 
-        //elementStyle.top = deltaY + "px";
-        //elementStyle.left = deltaX + "px";
+        /*elementStyle.top = deltaY + "px";
+        elementStyle.left = deltaX + "px";*/
         elementStyle.webkitTransform = transformValue;
         elementStyle.MozTransform = transformValue;
         elementStyle.msTransform = transformValue;

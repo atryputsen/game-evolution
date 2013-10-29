@@ -64,7 +64,7 @@
         };
 
         app = new Main();
-        setInterval(loop, 3000);
+        //setInterval(loop, 3000);
         container.classList.remove('hidden');
     }
 })();
