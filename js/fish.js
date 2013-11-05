@@ -15,13 +15,14 @@ function Fish (){
                 item, itemLeft, itemRight, tempX, tempY;
 
             item = constructorInfoGlobal[partName][partId];
-
+            this.health = fishInfo.health;
             if (partName === 'body'){
                 this.image = new Image();
                 this.image.src = item.src;
             }
 
             if (item) {
+                this.damage = item.damage;
                 switch (partName) {
                     case 'mouth':
                     case 'tail':
@@ -58,16 +59,17 @@ function Fish (){
                         tempY = Math.ceil(- this.height * 4 / 10);
                         break;
                     }
-
                 if (partName !== "body"){
                     if (itemRight && itemLeft){
                         itemRight.x = tempX;
                         itemLeft.x = Math.floor(-tempX - item.width);
                         itemLeft.y = itemRight.y = tempY;
-
+                        itemRight.type = partName;
+                        itemLeft.type = partName;
                         this.parts.push(itemRight);
                         this.parts.push(itemLeft);
                     } else if (item){
+                        item.type = partName;
                         item.x = tempX;
                         item.y = tempY;
 

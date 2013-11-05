@@ -6,7 +6,8 @@ var fishInfoGlobal = {
         "mouth": 0,
         "tail": 0,
         "fin": 0,
-        "horn": 0
+        "horn": 0,
+        "health": 1000
     },
     "fishes": [
         {
@@ -14,7 +15,8 @@ var fishInfoGlobal = {
             "height": 50,
             "body": 1,
             "mouth": 1,
-            "tail": 1
+            "tail": 1,
+            "health": 100
         },
         {
             "width": 30,
@@ -23,21 +25,24 @@ var fishInfoGlobal = {
             "mouth": 2,
             "tail": 1,
             "fin": 1,
-            "horn": 1
+            "horn": 1,
+            "health": 100
         },
         {
             "width": 30,
             "height": 50,
             "body": 1,
             "mouth": 1,
-            "tail": 1
+            "tail": 1,
+            "health": 100
         },
         {
             "width": 30,
             "height": 50,
             "body": 1,
             "mouth": 1,
-            "tail": 1
+            "tail": 1,
+            "health": 100
         },
         {
             "width": 30,
@@ -46,7 +51,8 @@ var fishInfoGlobal = {
             "mouth": 2,
             "tail": 1,
             "fin": 1,
-            "horn": 1
+            "horn": 1,
+            "health": 100
         }
     ]
 };

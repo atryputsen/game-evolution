@@ -24,6 +24,7 @@ function Render() {
         mapLayer,
 		fishLayer,
         heroLayer,
+        hudLayer,
         effectsLayer;
 
     var mapWidth, mapHeight,
@@ -69,6 +70,20 @@ function Render() {
         ctx = canvas.getContext("2d");
 
         heroLayer = ctx;
+    };
+
+    this.initHudLayer = function() {
+        var canvas, ctx;
+
+        canvas = document.createElement("canvas");
+        canvas.id = "hudLayer";
+        canvas.height = mapHeight;
+        canvas.width = mapWidth;
+        container.appendChild(canvas);
+
+        ctx = canvas.getContext("2d");
+
+        hudLayer = ctx;
     };
     this.initBackground = function(){
         var canvas, ctx, img, pattern;
@@ -152,6 +167,41 @@ function Render() {
         fishLayer.clearRect(fish.x-100, fish.y-100, 185, 185);
         this.drawFish(fish, fishLayer);
     };
+
+    this.clearFish = function(fish) {
+        fishLayer.clearRect(fish.x-100, fish.y-100, 185, 185);
+    };
+
+    this.healthDisplay = function (health) {
+        hudLayer.clearRect(0, 0, hudLayer.canvas.width, 20);
+        hudLayer.font = "bold 18px Arial";
+        hudLayer.fillText("Life Remaining:"+health, 80, 20);
+    };
+    this.fishesCounterDisplay = function (count) {
+        hudLayer.clearRect(0, 40, hudLayer.canvas.width, 40);
+        hudLayer.font = "bold 18px Arial";
+        hudLayer.fillText("Fishes Remaining:"+count, 80, 60);
+    };
+
+    this.timeDisplay = function (count) {
+        hudLayer.clearRect(0, 60, hudLayer.canvas.width, 60);
+        hudLayer.font = "bold 18px Arial";
+        hudLayer.fillText("Time Remaining:"+count, 80, 100);
+    };
+
+    this.gameOverDisplay = function () {
+        hudLayer.clearRect(0, 0, hudLayer.canvas.width, hudLayer.canvas.height);
+        hudLayer.fillStyle = "rgba(0, 0, 255, 1)";
+        hudLayer.font = "bold 84px Arial";
+        hudLayer.fillText("Game Over", 80, 100);
+    };
+    this.finishDisplay = function () {
+        hudLayer.clearRect(0, 0, hudLayer.canvas.width, hudLayer.canvas.height);
+        hudLayer.fillStyle = "rgba(0, 0, 255, 1)";
+        hudLayer.font = "bold 84px Arial";
+        hudLayer.fillText("Success", 80, 100);
+    };
+
     this.drawHero = function(fish) {
         var x = fish.x,
             y = fish.y,
@@ -166,6 +216,11 @@ function Render() {
         this.drawFish(heroClone, heroLayer);
 
         moveLayers(x, y, halfDimension);
+    };
+
+    this.clearHero = function() {
+        var dimension = heroLayer.canvas.width;
+        heroLayer.clearRect(0, 0, dimension, dimension);
     };
 
     this.positionHeroOnScreen = function(hero){

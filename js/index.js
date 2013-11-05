@@ -55,7 +55,7 @@
         };
 
         var loop = function() {
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < fishInfoGlobal.fishes.length; i++) {
                 var x = Math.floor(Math.random() * 1000),
                     y = Math.floor(Math.random() * 1000);
 

@@ -1,10 +1,17 @@
 var Customization = function(){
     var content = document.getElementById('customization');
 
+    function initIntroSound() {
+        this.introAudio = new Audio("data/sfx/intro-to-game.wav");
+        this.introAudio.loop = false;
+        this.introAudio.volume = .25;
+        this.introAudio.load();
+        this.introAudio.play();
+    }
     function init(){
         initCanvas();
         initItems();
-
+        initIntroSound();
         content.querySelector('button').addEventListener('click', applyChanges);
     }
     function initCanvas(){
