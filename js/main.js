@@ -5,7 +5,7 @@ function Main() {
         fishes = [],
         hero,
         animReqHero,
-        animReqFish = {};
+        animReqFish;
 
     function initBarriers(){
         var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
@@ -43,8 +43,8 @@ function Main() {
 		var fishesCount = mapInfo.levels[0].fishes;
         for(var i = 0; i < fishesCount; i++) {
             var fish = new Fish(
-                Math.round(mapInfo.map.width / 2) - 1000 * Math.random(),
-                Math.round(mapInfo.map.height / 2) - 1000 * Math.random(),
+                Math.round(mapInfo.map.width * Math.random()),
+                Math.round(mapInfo.map.height * Math.random()),
                 fishInfoGlobal.fishes[i]
             );
             fishes.push(fish);
@@ -85,23 +85,32 @@ function Main() {
         renderAll();
 	}
 
-    function checkCollision(vertexs, fish) {
-        var matrixCollision = false;
+    function checkCollision(vertexs, checkHero) {
+        var matrixCollision = false, x, y;
         for(var j = 0; j < vertexs.length; j++) {
-            var x = Math.floor(vertexs[j][0]/ mapInfo.barrier.width);
-            var y = Math.floor(vertexs[j][1]/ mapInfo.barrier.height);
+            x = Math.floor(vertexs[j][0]/ mapInfo.barrier.width);
+            y = Math.floor(vertexs[j][1]/ mapInfo.barrier.height);
             if (mapArray[y][x]){
-                matrixCollision = true;
                 //console.log('collision');
+                matrixCollision = true;
                 return matrixCollision;
             }
         }
 
-        var fishCollision = false;
-        for(var i = 0; i < fishes.length; i++) {
-            if (fishes[i] !== fish){
-                fishes[i].vertexes = collisionLib.vert.convertSquare( fishes[i] )
-                var collisionSat = collisionLib.vert.sat(vertexs, fishes[i].vertexes);
+        var fishCollision = false, collisionSat;
+
+        if (!checkHero) {
+            hero.vertexes = collisionLib.vert.convertSquare(hero);
+            collisionSat = collisionLib.vert.sat(vertexs, hero.vertexes);
+            if (collisionSat) {
+                //console.log('collisionSat');
+                fishCollision = true;
+                return fishCollision;
+            }
+        } else {
+            for(var i = 0; i < fishes.length; i++) {
+                fishes[i].vertexes = collisionLib.vert.convertSquare(fishes[i]);
+                collisionSat = collisionLib.vert.sat(vertexs, fishes[i].vertexes);
                 if (collisionSat) {
                     //console.log('collisionSat');
                     fishCollision = true;
@@ -112,27 +121,12 @@ function Main() {
 
         return false;
     }
-
-    function move(wayX, wayY, fishId) {
-        var fish,
-            animReq,
-            drawFunction,
-            way,
+    function countMoveStep(fish, wayX, wayY){
+        var way,
             deltaX, deltaY,
             angle, deltaSign,
-            steps, step = 0;
+            steps;
 
-        if (fishId !== undefined) {
-            fish = fishes[fishId];
-            animReq = animReqFish[fishId];
-            drawFunction = render.drawFishAi;
-        } else {
-            fish = hero;
-            animReq = animReqHero;
-            drawFunction = render.drawHero;
-        }
-
-        stopRequestAnimFrame(animReq);
         way = Math.sqrt(wayX * wayX + wayY * wayY);
         steps = way / fish.speed;
 
@@ -147,65 +141,65 @@ function Main() {
         }
         deltaSign = (angle - fish.angle > 0) ? 1 : -1;
 
-        var doMove = function() {
-            stopRequestAnimFrame(animReq);
-            if (angle !== fish.angle) {
-                if (Math.abs(angle - fish.angle) > fish.speed){
-                    fish.angle += fish.speed * deltaSign;
-                } else {
-                    fish.angle = angle;
-                }
-                drawFunction.call(render, fish);
-                animReq = requestAnimFrame(doMove);
-            } else if (step < steps) {
-                var cloneFish = clone(fish);
-                cloneFish.x += deltaX;
-                cloneFish.y += deltaY;
+        return {
+            step: 0,
+            steps: steps,
+            deltaX: deltaX,
+            deltaY: deltaY,
+            angle: angle,
+            deltaSign: deltaSign
+        }
+    }
+    function nextMoveStep(fish, drawFunction, options){
+        var step = options.step,
+            steps = options.steps,
+            deltaX = options.deltaX,
+            deltaY = options.deltaY,
+            angle = options.angle,
+            deltaSign = options.deltaSign;
 
-                if (cloneFish.parts.length > 0) {
-                    for (var i = 0; i < cloneFish.parts.length; i++) {
-                        cloneFish.parts[i].vertexes = collisionLib.vert.convertSquare( cloneFish.getPartInfo(cloneFish.parts[i]) );
-                        if (checkCollision(cloneFish.parts[i].vertexes)) {
-                            //console.log('collision ' + cloneFish.parts[i].type);
-                        }
+        if (angle !== fish.angle) {
+            if (Math.abs(angle - fish.angle) > fish.speed){
+                fish.angle += fish.speed * deltaSign;
+            } else {
+                fish.angle = angle;
+            }
+        } else if (step < steps) {
+            var cloneFish = clone(fish);
+            cloneFish.x += deltaX;
+            cloneFish.y += deltaY;
+
+            if (cloneFish.parts.length > 0) {
+                for (var i = 0; i < cloneFish.parts.length; i++) {
+                    cloneFish.parts[i].vertexes = collisionLib.vert.convertSquare( cloneFish.getPartInfo(cloneFish.parts[i]) );
+                    if (checkCollision(cloneFish.parts[i].vertexes, options.checkHero)) {
+                        //console.log('collision ' + cloneFish.parts[i].type);
+                    } else {
+                        //render.effect(cloneFish.x, cloneFish.y);
                     }
                 }
-
-                cloneFish.vertexes = collisionLib.vert.convertSquare( cloneFish );
-                if (!checkCollision(cloneFish.vertexes, fish)) {
-                    //console.log('collision body');
-                    fish.x = cloneFish.x;
-                    fish.y = cloneFish.y;
-                    drawFunction.call(render, fish);
-                    animReq = requestAnimFrame(doMove);
-                }
-
-                if (step % 50 === 0){
-                    render.effect(fish.x, fish.y);
-                }
-
-                step++;
-                delete cloneFish;
             }
 
-            if (fishId !== undefined) {
-                animReqFish[fishId] = animReq;
+            cloneFish.vertexes = collisionLib.vert.convertSquare( cloneFish );
+            if (!checkCollision(cloneFish.vertexes, options.checkHero)) {
+                //console.log('collision body');
+                fish.x = cloneFish.x;
+                fish.y = cloneFish.y;
             } else {
-                animReqHero = animReq;
+                //render.effect(cloneFish.x, cloneFish.y);
             }
-        };
 
-        animReq = requestAnimFrame(doMove);
-        if (fishId !== undefined) {
-            animReqFish[fishId] = animReq;
-        } else {
-            animReqHero = animReq;
+            options.step++;
+            delete cloneFish;
         }
+
+        drawFunction.call(render, fish);
     }
 
     this.moveDirection = function(direction) {
         var deltaX = 0,
-            deltaY = 0;
+            deltaY = 0,
+            options;
 
         switch (direction) {
             case enums.direction.down:
@@ -237,24 +231,56 @@ function Main() {
                 deltaY = -hero.speed;
                 break;
         }
-        move(deltaX * 10, deltaY * 10);
-    };
-    this.moveTo = function(clientX, clientY, fishId) {
-        var wayX, wayY,
-            position;
 
-        // moveFish
-        if (fishId !== undefined) {
-            wayX = clientX - window.innerWidth / 2;
-            wayY = clientY - window.innerHeight / 2;
-        } else {
-        // moveHero
-            position = render.positionHeroOnScreen(hero);
-            wayX = clientX - position.x;
-            wayY = clientY - position.y;
+        options = countMoveStep(hero, deltaX * 10, deltaY * 10);
+        options.checkHero = true;
+
+        var doMove = function(){
+            stopRequestAnimFrame(animReqHero);
+            nextMoveStep(hero, render.drawHero, options);
+            animReqHero = requestAnimFrame(doMove);
+        };
+
+        stopRequestAnimFrame(animReqHero);
+        animReqHero = requestAnimFrame(doMove);
+    };
+    this.heroMoveTo = function(clientX, clientY) {
+        var position = render.positionHeroOnScreen(hero),
+            wayX = clientX - position.x,
+            wayY = clientY - position.y,
+            options = countMoveStep(hero, wayX, wayY);
+
+        options.checkHero = true;
+        var doMove = function(){
+            stopRequestAnimFrame(animReqHero);
+            nextMoveStep(hero, render.drawHero, options);
+            animReqHero = requestAnimFrame(doMove);
+        };
+
+        stopRequestAnimFrame(animReqHero);
+        animReqHero = requestAnimFrame(doMove);
+    };
+    this.fishMoveTo = function(){
+        var wayX, wayY, options = new Array(5);
+
+        for (var i = 0; i < 5; i++) {
+            wayX = Math.floor((Math.random() - 0.5) * window.innerWidth);
+            wayY = Math.floor((Math.random() - 0.5) * window.innerHeight);
+            options[i] = countMoveStep(fishes[i], wayX, wayY);
+            options[i].checkHero = false;
         }
 
-        move(wayX, wayY, fishId);
+        var doMove = function(){
+            stopRequestAnimFrame(animReqFish);
+            render.clearFishLayer();
+            for (var i = 0; i < 5; i++) {
+                nextMoveStep(fishes[i], render.drawFish, options[i]);
+            }
+            animReqFish = requestAnimFrame(doMove);
+        };
+
+        stopRequestAnimFrame(animReqFish);
+        animReqFish = requestAnimFrame(doMove);
     };
 
     this.resize = function() {

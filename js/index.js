@@ -51,20 +51,11 @@
             var x = e.clientX,
                 y = e.clientY;
 
-            app.moveTo(x, y);
-        };
-
-        var loop = function() {
-            for (var i = 0; i < 5; i++) {
-                var x = Math.floor(Math.random() * 1000),
-                    y = Math.floor(Math.random() * 1000);
-
-                app.moveTo(x, y, i);
-            }
+            app.heroMoveTo(x, y);
         };
 
         app = new Main();
-        //setInterval(loop, 3000);
+        setInterval(app.fishMoveTo, 3000);
         container.classList.remove('hidden');
     }
 })();
