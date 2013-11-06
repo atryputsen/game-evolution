@@ -13,9 +13,9 @@ Sprites.prototype = {
         this._sprites = data.sprites;
     },
 
-    getOffset: function(spriteName) {
-        for(var i = 0, len = this._sprites.length; i < len; i++) {
-            var sprite = this._sprites[i];
+    getOffset: function(spriteName, sprites) {
+        for(var i = 0, len = sprites.length; i < len; i++) {
+            var sprite = sprites[i];
 
             if(sprite.name == spriteName) {
                 return {
