@@ -10,7 +10,7 @@ var mapInfoGlobal = {
         "src": 'data/img/barrier/1.png'
     },
     "parallax": {
-        "footer": 1,
+        "footer": 0.3,
         "effects": 1.5
     },
 	"levels": [{

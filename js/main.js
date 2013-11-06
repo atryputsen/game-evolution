@@ -1,5 +1,5 @@
 /**
- * The main module where initialize all data and send request to main functionality - render, chech collistions, play sound.
+ * The main module initialize all data and send request to main functionality - render, chech collistions, play sound.
  * @private {Object} render The render module instance
  * @private {Object} mapInfo Info about map that contains width, height, barrier percentage, barrier height and width, parralax values, timer value
  * @private {Array.<boolean>} mapArray The map table that provide information about barrier in map cell
@@ -206,10 +206,13 @@ function Main() {
                 if (collisionSat) {
                     AudioModule.playFishCollisionSound();
                     fishes[i].health = fishes[i].health - hero.damage;
-                    /*if (fishPart.animation_eat){
+                    if (fishPart.animation_eat && !fishPart.timeout){
+                      fishPart.timeout = setTimeout(function(){
                         fishPart.animation_eat_index = (fishPart.animation_eat_index + 1) % fishPart.animation_eat.length || 0;
                         fishPart.sprite = fishPart.sprites.getOffset(fishPart.animation_eat[fishPart.animation_eat_index]);
-                    }*/
+                        clearTimeout(fishPart.timeout);
+                      },200);
+                    }
                     render.healthDisplay(fishes[i].health);
                     if (fishes[i].health <= 0) {
                         AudioModule.playCollisionSound();

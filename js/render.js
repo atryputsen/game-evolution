@@ -1,28 +1,28 @@
-var requestAnimFrame = (function() {
-    return window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame || 
-		window.mozRequestAnimationFrame || 
-		window.oRequestAnimationFrame || 
-		window.msRequestAnimationFrame ||
-		function(callback) {
-			window.setTimeout(callback, 1000 / 60);
-		};
-})();
-var stopRequestAnimFrame = (function() {
-    return window.cancelAnimationFrame ||
-        window.webkitCancelAnimationFrame ||
-        window.mozCancelAnimationFrame ||
-        window.oCancelAnimationFrame ||
-        window.msCancelAnimationFrame ||
-        window.clearTimeout;
-})();
-
+/**
+ * The render module to canvas
+ * @private {DOM Object} container The element that contains all layer canvases
+ * @private {Object} options Options for drawing: parrallax values, background images
+ * @private {DOM Object} backgroundLayer Canvas for background - move with parallax
+ * @private {DOM Object} mapLayer Canvas for barriers - move without parallax like hero and other fishes but doesn't rerender
+ * @private {DOM Object} fishLayer Canvas for fishes - move without parallax and rerender
+ * @private {DOM Object} heroLayer Canvas for hero - move without parallax and rerender, it's smaller that other one
+ * @private {DOM Object} hudLayer Canvas for info - score and etc.
+ * @private {DOM Object} effectsLayer Canvas for effects (didn't implemented)
+ * @private {number} mapWidth Width of map
+ * @private {number} mapHeight Height of map
+ * @private {number} centerMapX Center x coordinate of map
+ * @private {number} centerMapY Center y coordinate of map
+ * @private {number} viewportWidth Width of viewport/screen
+ * @private {number} viewportHeight Height of viewport/screen
+ * @private {number} centerViewportX Center x coordinate of viewport/screen
+ * @private {number} centerViewportY Center y coordinate of viewport/screen 
+ */
 function Render() {
 	var container,
         options,
         backgroundLayer,
         mapLayer,
-		fishLayer,
+        fishLayer,
         heroLayer,
         hudLayer,
         effectsLayer;
@@ -33,18 +33,18 @@ function Render() {
         centerViewportX, centerViewportY;
 
     this.initMapLayer = function() {
-		var canvas, ctx;
+      var canvas, ctx;
 
-        canvas = document.createElement("canvas");
-        canvas.id = "mapLayer";
-        canvas.height = mapHeight;
-		canvas.width = mapWidth;
-        container.appendChild(canvas);
-		
-		ctx = canvas.getContext("2d");
-		
-		mapLayer = ctx;
-	};
+      canvas = document.createElement("canvas");
+      canvas.id = "mapLayer";
+      canvas.height = mapHeight;
+      canvas.width = mapWidth;
+      container.appendChild(canvas);
+      
+      ctx = canvas.getContext("2d");
+      
+      mapLayer = ctx;
+    };
     this.initFishLayer = function() {
         var canvas, ctx;
 
@@ -172,8 +172,15 @@ function Render() {
 
         totalLayer.translate(x, y);
         for (var i = 0; i < fish.parts.length; i++) {
+            var sprite = fish.parts[i].sprite,
+                spriteX = sprite ? (sprite.x || 0) : 0,
+                spriteY = sprite ? (sprite.y || 0) : 0;
+            
+            if (spriteX > 0 || spriteY > 0) {
+              console.log(spriteX + " " + spriteY);
+            }
             totalLayer.drawImage(fish.parts[i].image,
-                0, 0, fish.parts[i].width, fish.parts[i].height,
+                spriteX, spriteY, fish.parts[i].width, fish.parts[i].height,
                 fish.parts[i].x, fish.parts[i].y, fish.parts[i].width, fish.parts[i].height
             );
         }
@@ -218,6 +225,9 @@ function Render() {
         };
     };
 
+    /**
+     * Functions for print scope on Hud layer
+     */
     this.healthDisplay = function (health) {
         hudLayer.clearRect(0, 0, hudLayer.canvas.width, 20);
         hudLayer.font = "bold 18px Arial";
@@ -285,6 +295,10 @@ function Render() {
 
         container = document.getElementById("container");
     }
+    
+    /**
+     * Move layers depends on parallax
+     */
     function moveLayers(heroX, heroY, heroDimension){
         var layerStartX, layerStartY;
 
