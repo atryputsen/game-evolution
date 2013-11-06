@@ -11,21 +11,26 @@
         <script src="data/audio.js"></script>
 
         <script src="js/enums.js"></script>
+        <script src="js/sprites.js"></script>
         <script src="js/customization.js"></script>
         <script src="js/fish.js"></script>
         <script src="js/index.js"></script>
         <script src="js/helper.js"></script>
         <script src="js/main.js"></script>
+        <script src="js/audio.js"></script>
 		<script src="js/render.js"></script>
 
         <style>
             * {
-                overflow:hidden;
                 margin:0; padding:0;
                 box-sizing: border-box;
             }
-            body > * {
+            html,
+            body,
+            #container,
+            #customization {
                 height:100%;
+                overflow:hidden;
             }
             .hidden {
                 display:none;
@@ -34,11 +39,13 @@
             /* Customization section style */
             #customization > * {
                 display:inline-block;
+                height:100%;
             }
             #customization canvas {
-                width:50%; height:100%;
+                width:50%;
             }
             #customization > ul {
+                overflow: auto;
                 width:49%;
                 vertical-align: top;
             }
@@ -71,13 +78,9 @@
 
             /* Map section style */
             #container {
-                backface-visibility:hidden;
-                -webkit-backface-visibility:hidden; /* Chrome and Safari */
-                -moz-backface-visibility:hidden; /* Firefox */
-                -ms-backface-visibility:hidden; /* Internet Explorer */
+                position:relative;
             }
             #container canvas {
-                height:auto;
                 position:absolute;
                 top:0; left:0;
                 background:transparent;

@@ -20,8 +20,14 @@ var constructorInfoGlobal = {
         {
             "width": 20,
             "height": 17,
-            "src": "data/img/mouth/1/main.png",
-            "animation_eat": ["data/img/mouth/1/main.png", "data/img/mouth/1/eat1.png", "data/img/mouth/1/eat2.png"],
+            "main_src": "data/img/mouth/1/main.png",
+            "src": "data/img/mouth/1/sprites.png",
+            "sprites": [
+                { name: 'eat_0' },
+                { name: 'eat_1', x: 1, y: 0 },
+                { name: 'eat_2', x: 2, y: 0 }
+            ],
+            "animation_eat": ['eat_0', 'eat_1', 'eat_2', 'eat_1'],
             "damage": 7
         }, {
             "width": 15,

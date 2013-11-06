@@ -1,7 +1,10 @@
 (function() {
+    var fishInterval;
+
     window.onload = function(){
         var customization = new Customization();
         document.addEventListener('customization.done', init);
+        document.addEventListener('end', clear);
     };
 
     function init() {
@@ -51,20 +54,19 @@
             var x = e.clientX,
                 y = e.clientY;
 
-            app.moveTo(x, y);
-        };
-
-        var loop = function() {
-            for (var i = 0; i < fishInfoGlobal.fishes.length; i++) {
-                var x = Math.floor(Math.random() * 1000),
-                    y = Math.floor(Math.random() * 1000);
-
-                app.moveTo(x, y, i);
-            }
+            app.heroMoveTo(x, y);
         };
 
         app = new Main();
-        setInterval(loop, 3000);
+        fishInterval = setInterval(app.fishMoveTo, 3000);
         container.classList.remove('hidden');
+    }
+
+    function clear(){
+        window.onresize = null;
+        window.onkeydown = null;
+        window.onkeyup = null;
+        window.onmousedown = null;
+        clearInterval(fishInterval);
     }
 })();

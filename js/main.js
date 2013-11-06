@@ -5,16 +5,23 @@ function Main() {
         fishes = [],
         hero,
         animReqHero,
-        animReqFish = {},
-        backgroundAudio,
-        fishMoveAudio,
-        collisionAudio,
-        fishCollisionAudio,
-        successAudio,
+        animReqFish,
         finishGameTime,
-        timerVar;
+        timerVar,
+        finishEvent;
 
-    function initBarriers() {
+    function timer(){
+        finishGameTime--;
+        if(finishGameTime==0){
+            render.gameOverDisplay();
+            document.dispatchEvent(finishEvent);
+            setTimeout(function(){},1000);
+        } else{
+            render.timeDisplay(finishGameTime);
+            timerVar = setTimeout(timer,1000);
+        }
+    }
+    function initBarriers(){
         var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
             width = Math.floor(mapInfo.map.width / mapInfo.barrier.width),
             percentage = mapInfo.levels[0].barriers,
@@ -39,15 +46,14 @@ function Main() {
             }
         }
 
-        for (l = 0; l < count; l++) {
-            i = Math.floor(Math.random() * (width - 1));
-            j = Math.floor(Math.random() * (height - 1));
+        for (l = 0; l < count; l++){
+            i = Math.floor(Math.random() * (width-1));
+            j = Math.floor(Math.random() * (height-1));
             if (j != height/2 && i != width/2) {
                 mapArray[j][i] = 1;
-            } 
+            }
         }
     }
-
     function generateRandomPositionFish(i) {
         var fish = new Fish(
             Math.round(mapInfo.map.width / 2) - 1000 * Math.random(),
@@ -56,18 +62,16 @@ function Main() {
         );
         return fish;
     }
-
     function initFishes() {
         var fishesCount = mapInfo.levels[0].fishes;
         for (var i = 0; i < fishesCount; i++) {
             var fish = generateRandomPositionFish(i);
-            if (checkWallCollision(fish)) {
+            while (checkWallCollision(fish)) {
                 fish = generateRandomPositionFish(i);
             }
             fishes.push(fish);
         }
     }
-
     function initHero() {
         hero = new Fish(
             Math.round(mapInfo.map.width / 2),
@@ -75,8 +79,11 @@ function Main() {
             fishInfoGlobal.hero
         );
     }
-
-    function renderAll() {
+    function initTimer() {
+        finishGameTime = mapInfo.levels[0].timer;
+        timerVar = setTimeout(timer,1000);
+    }
+    function renderAll(){
         render = new Render(mapInfo.map.width, mapInfo.map.height, window.innerWidth, window.innerHeight, {
             backgroundImg: mapInfo.map.src,
             barrierImg: mapInfo.barrier.src,
@@ -88,7 +95,7 @@ function Main() {
         render.initFishLayer();
         render.initHudLayer();
         render.initHeroLayer(hero.width, hero.height);
-        //render.initEffects();
+        render.initEffectLayer();
 
         render.drawBarriers(mapInfo.barrier.width, mapInfo.barrier.height, mapArray);
         for (var i = 0; i < fishes.length; i++) {
@@ -96,253 +103,171 @@ function Main() {
         }
         render.drawHero(hero);
     }
-
-    function initBackgroundMusic() {
-        backgroundAudio = new Audio(audioGlobal.background.src);
-        backgroundAudio.loop = true;
-        backgroundAudio.volume = .25;
-        backgroundAudio.load();
-        backgroundAudio.play();
-    }
-
-    function initFishMoveSound() {
-        fishMoveAudio = new Audio(audioGlobal.fishMove.src);
-        fishMoveAudio.loop = true;
-        fishMoveAudio.volume = .75;
-        fishMoveAudio.load();
-    }
-
-    function timer(){
-        finishGameTime--;
-        if(finishGameTime==0){
-            render.gameOverDisplay();
-            setTimeout(function(){},1000);
-        } else{
-            render.timeDisplay(finishGameTime);
-            timerVar = setTimeout(timer,1000);
-        }
-    }
-
-    function initTimer() {
-        finishGameTime = mapInfo.levels[0].timer,
-        timerVar = setTimeout(timer,1000);
-    }
-
-    function playFishMoveSound() {
-        fishMoveAudio.play();
-    }
-
-    function stopFishMoveSound() {
-        fishMoveAudio.pause();
-    }
-
-    function initCollisionSound() {
-        collisionAudio = new Audio(audioGlobal.collision.src);
-        collisionAudio.loop = false;
-        collisionAudio.volume = .75;
-        collisionAudio.load();
-    }
-
-    function playCollisionSound() {
-        collisionAudio.play();
-    }
-
-    function stopCollisionSound() {
-        collisionAudio.pause();
-    }
-
-    function initFishCollisionSound() {
-        fishCollisionAudio = new Audio(audioGlobal.fishCollision.src);
-        fishCollisionAudio.loop = false;
-        fishCollisionAudio.volume = .75;
-        fishCollisionAudio.load();
-    }
-
-    function playFishCollisionSound() {
-        fishCollisionAudio.play();
-    }
-
-    function stopFishCollisionSound() {
-        fishCollisionAudio.pause();
-    }
-
-    function initSuccessSound() {
-        successAudio = new Audio(audioGlobal.success.src);
-        successAudio.loop = false;
-        successAudio.volume = .75;
-        successAudio.load();
-    }
-
-    function playSuccessSound() {
-        successAudio.play();
-    }
-
     function init() {
         mapInfo = mapInfoGlobal;
         initBarriers();
         initFishes();
         initHero();
-        initBackgroundMusic();
-        initFishMoveSound();
-        initCollisionSound();
-        initFishCollisionSound();
-        initSuccessSound()
-        renderAll();
-        initTimer()
-    }
+        AudioModule.playBackgroundMusic();
 
-    function checkWallCollision(hero) {
-        var vertexs = hero.vertexes;
-        var matrixCollision = false;
+        finishEvent = document.createEvent('Events');
+        finishEvent.initEvent('end');
+        document.addEventListener('end', function(){
+            stopRequestAnimFrame(animReqHero);
+            stopRequestAnimFrame(animReqFish);
+            AudioModule.stopFishMoveSound();
+        });
+
+        renderAll();
+        initTimer();
+	}
+
+    function checkWallCollision(fish) {
+        var vertexs = fish.vertexes,
+            matrixCollision = false,
+            x, y;
         for (var j = 0; j < vertexs.length; j++) {
-            var x = Math.floor(vertexs[j][0] / mapInfo.barrier.width);
-            var y = Math.floor(vertexs[j][1] / mapInfo.barrier.height);
+            x = Math.floor(vertexs[j][0] / mapInfo.barrier.width);
+            y = Math.floor(vertexs[j][1] / mapInfo.barrier.height);
             if (mapArray[y][x]) {
                 matrixCollision = true;
-                return matrixCollision;
+                break;
             }
         }
         return matrixCollision;
     }
+    function checkCollision(fish, isHero) {
+        var vertexs = fish.vertexes;
 
-    function checkCollision(hero, fish, fishId) {
-        var vertexs = hero.vertexes;
-        var matrixCollision = false;
-        for (var j = 0; j < vertexs.length; j++) {
-            var x = Math.floor(vertexs[j][0] / mapInfo.barrier.width);
-            var y = Math.floor(vertexs[j][1] / mapInfo.barrier.height);
-            if (mapArray[y][x]) {
-                matrixCollision = true;
-                //console.log('collision');
-                return matrixCollision;
-            }
+        var matrixCollision = checkWallCollision(fish);
+        if (matrixCollision){
+            return matrixCollision;
         }
 
-        var fishCollision = false;
-        for (var i = 0; i < fishes.length; i++) {
-            if (fishes[i] !== fish) {
-                fishes[i].vertexes = collisionLib.vert.convertSquare(fishes[i])
-                var collisionSat = collisionLib.vert.sat(vertexs, fishes[i].vertexes);
+        var fishCollision = false, collisionSat;
+        if (isHero) {
+            for(var i = 0; i < fishes.length; i++) {
+                fishes[i].vertexes = collisionLib.vert.convertSquare(fishes[i]);
+                collisionSat = collisionLib.vert.sat(vertexs, fishes[i].vertexes);
                 if (collisionSat) {
-                    if (fishId === undefined) {
-                        playFishCollisionSound();
-                        fishes[i].health = fishes[i].health - hero.damage;
-                        render.healthDisplay(fishes[i].health)
-                        if (fishes[i].health <= 0) {
-                            playCollisionSound()
-                            render.clearFish(fishes[i])
-                            fishes.splice(i, 1)
-                        }
-                        render.fishesCounterDisplay(fishes.length)
-                        if (fishes.length <= 0) {
-                            playSuccessSound();
-                            render.finishDisplay();
-                            clearTimeout(timerVar);
-                        }
+                    AudioModule.playFishCollisionSound();
+                    fishes[i].health = fishes[i].health - hero.damage;
+                    if (fish.animation_eat){
+                        fish.animation_eat_index = (fish.animation_eat_index + 1) % fish.animation_eat.length || 0;
+                        var sprite = fish.sprites.getOffset(fish.animation_eat[fish.animation_eat_index]);
+                        fish.x = sprite.x;
+                        fish.y = sprite.y;
+                    }
+                    render.healthDisplay(fishes[i].health);
+                    if (fishes[i].health <= 0) {
+                        AudioModule.playCollisionSound();
+                        fishes.splice(i, 1);
+                    }
+                    render.fishesCounterDisplay(fishes.length);
+                    if (fishes.length <= 0) {
+                        AudioModule.playSuccessSound();
+                        document.dispatchEvent(finishEvent);
+                        render.finishDisplay();
+                        clearTimeout(timerVar);
                     }
                     fishCollision = true;
-                    return fishCollision;
+                    break;
                 }
             }
+        } else {
+            hero.vertexes = collisionLib.vert.convertSquare(hero);
+            collisionSat = collisionLib.vert.sat(vertexs, hero.vertexes);
+            if (collisionSat) {
+                //console.log('collisionSat');
+                fishCollision = true;
+                return fishCollision;
+            }
         }
-        // fish hero collision
-        return false;
-    }
 
-    function move(wayX, wayY, fishId) {
-        var fish,
-            animReq,
-            drawFunction,
-            way,
+        return fishCollision;
+    }
+    function countMoveStep(fish, wayX, wayY){
+        var way,
             deltaX, deltaY,
             angle, deltaSign,
-            steps, step = 0;
+            steps;
 
-        if (fishId !== undefined) {
-            fish = fishes[fishId];
-            animReq = animReqFish[fishId];
-            drawFunction = render.drawFishAi;
-        } else {
-            playFishMoveSound();
-            fish = hero;
-            animReq = animReqHero;
-            drawFunction = render.drawHero;
+        way = Math.sqrt(wayX * wayX + wayY * wayY);
+        steps = way / fish.speed;
+        deltaX = wayX / steps;
+        deltaY = wayY / steps;
+
+        angle = Math.atan2(wayX, -wayY) * 180 / Math.PI;
+        if (angle - fish.angle > 180) {
+            fish.angle += 360
+        } else if (angle - fish.angle < -180) {
+            fish.angle -= 360;
         }
-        if (fish) {
-            stopRequestAnimFrame(animReq);
-            way = Math.sqrt(wayX * wayX + wayY * wayY);
-            steps = way / fish.speed;
+        deltaSign = (angle - fish.angle > 0) ? 1 : -1;
 
-            deltaX = wayX / steps;
-            deltaY = wayY / steps;
+        return {
+            step: 0,
+            steps: steps,
+            deltaX: deltaX,
+            deltaY: deltaY,
+            angle: angle,
+            deltaSign: deltaSign
+        }
+    }
+    function nextMoveStep(fish, drawFunction, options){
+        var step = options.step,
+            steps = options.steps,
+            deltaX = options.deltaX,
+            deltaY = options.deltaY,
+            angle = options.angle,
+            deltaSign = options.deltaSign;
 
-            angle = Math.atan2(wayX, -wayY) * 180 / Math.PI;
-            if (angle - fish.angle > 180) {
-                fish.angle += 360
-            } else if (angle - fish.angle < -180) {
-                fish.angle -= 360;
-            }
-            deltaSign = (angle - fish.angle > 0) ? 1 : -1;
-
-            var doMove = function() {
-                stopRequestAnimFrame(animReq);
-                if (angle !== fish.angle) {
-                    if (Math.abs(angle - fish.angle) > fish.speed) {
-                        fish.angle += fish.speed * deltaSign;
-                    } else {
-                        fish.angle = angle;
-                    }
-                    drawFunction.call(render, fish);
-                    animReq = requestAnimFrame(doMove);
-                } else if (step < steps) {
-                    var cloneFish = clone(fish);
-                    cloneFish.x += deltaX;
-                    cloneFish.y += deltaY;
-
-                    if (cloneFish.parts.length > 0) {
-                        for (var i = 0; i < cloneFish.parts.length; i++) {
-                            cloneFish.parts[i].vertexes = collisionLib.vert.convertSquare(cloneFish.getPartInfo(cloneFish.parts[i]));
-                            if (checkCollision(cloneFish.parts[i], null, fishId) && (fishId === undefined)) {
-                                //console.log(cloneFish.health)
-                                //console.log('collision ' + cloneFish.parts[i].type + ' damage ' + cloneFish.parts[i].damage);
-                            }
-                        }
-                    }
-
-                    cloneFish.vertexes = collisionLib.vert.convertSquare(cloneFish);
-                    if (!checkCollision(cloneFish, fish, fishId)) {
-                        //console.log('collision body');
-                        fish.x = cloneFish.x;
-                        fish.y = cloneFish.y;
-                        drawFunction.call(render, fish);
-                        animReq = requestAnimFrame(doMove);
-                    }
-
-                    step++;
-                    delete cloneFish;
-                } else {
-                    stopFishMoveSound()
-                }
-
-                if (fishId !== undefined) {
-                    animReqFish[fishId] = animReq;
-                } else {
-                    animReqHero = animReq;
-                }
-            };
-
-            animReq = requestAnimFrame(doMove);
-            if (fishId !== undefined) {
-                animReqFish[fishId] = animReq;
+        if (angle !== fish.angle) {
+            if (Math.abs(angle - fish.angle) > fish.speed){
+                fish.angle += fish.speed * deltaSign;
             } else {
-                animReqHero = animReq;
+                fish.angle = angle;
+            }
+        } else if (step < steps) {
+            var cloneFish = clone(fish);
+            cloneFish.x += deltaX;
+            cloneFish.y += deltaY;
+
+            if (cloneFish.parts.length > 0) {
+                for (var i = 0; i < cloneFish.parts.length; i++) {
+                    cloneFish.parts[i].vertexes = collisionLib.vert.convertSquare( cloneFish.getPartInfo(cloneFish.parts[i]) );
+                    if (checkCollision(cloneFish.parts[i], options.isHero)) {
+                        //console.log('collision ' + cloneFish.parts[i].type);
+                    } else {
+                        //render.effect(cloneFish.x, cloneFish.y);
+                    }
+                }
+            }
+
+            cloneFish.vertexes = collisionLib.vert.convertSquare( cloneFish );
+            if (!checkCollision(cloneFish, options.isHero)) {
+                //console.log('collision body');
+                fish.x = cloneFish.x;
+                fish.y = cloneFish.y;
+            } else {
+                //render.effect(cloneFish.x, cloneFish.y);
+            }
+
+            options.step++;
+            delete cloneFish;
+        } else {
+            if (options.isHero){
+                AudioModule.stopFishMoveSound();
             }
         }
+
+        drawFunction.call(render, fish);
     }
 
     this.moveDirection = function(direction) {
         var deltaX = 0,
-            deltaY = 0;
+            deltaY = 0,
+            options;
 
         switch (direction) {
             case enums.direction.down:
@@ -374,24 +299,57 @@ function Main() {
                 deltaY = -hero.speed;
                 break;
         }
-        move(deltaX * 10, deltaY * 10);
-    };
-    this.moveTo = function(clientX, clientY, fishId) {
-        var wayX, wayY,
-            position;
 
-        // moveFish
-        if (fishId !== undefined) {
-            wayX = clientX - window.innerWidth / 2;
-            wayY = clientY - window.innerHeight / 2;
-        } else {
-            // moveHero
-            position = render.positionHeroOnScreen(hero);
-            wayX = clientX - position.x;
-            wayY = clientY - position.y;
+        options = countMoveStep(hero, deltaX * 10, deltaY * 10);
+        options.isHero = true;
+
+        var doMove = function(){
+            stopRequestAnimFrame(animReqHero);
+            nextMoveStep(hero, render.drawHero, options);
+            animReqHero = requestAnimFrame(doMove);
+        };
+
+        stopRequestAnimFrame(animReqHero);
+        animReqHero = requestAnimFrame(doMove);
+    };
+    this.heroMoveTo = function(clientX, clientY) {
+        var position = render.positionHeroOnScreen(hero),
+            wayX = clientX - position.x,
+            wayY = clientY - position.y,
+            options = countMoveStep(hero, wayX, wayY);
+
+        options.isHero = true;
+        var doMove = function(){
+            stopRequestAnimFrame(animReqHero);
+            AudioModule.playFishMoveSound();
+            nextMoveStep(hero, render.drawHero, options);
+            animReqHero = requestAnimFrame(doMove);
+        };
+
+        stopRequestAnimFrame(animReqHero);
+        animReqHero = requestAnimFrame(doMove);
+    };
+    this.fishMoveTo = function(){
+        var wayX, wayY, options = new Array(5);
+
+        for (var i = 0; i < fishes.length; i++) {
+            wayX = Math.floor((Math.random() - 0.5) * window.innerWidth);
+            wayY = Math.floor((Math.random() - 0.5) * window.innerHeight);
+            options[i] = countMoveStep(fishes[i], wayX, wayY);
+            options[i].isHero = false;
         }
 
-        move(wayX, wayY, fishId);
+        var doMove = function(){
+            stopRequestAnimFrame(animReqFish);
+            render.clearFishLayer();
+            for (var i = 0; i < fishes.length; i++) {
+                nextMoveStep(fishes[i], render.drawFish, options[i]);
+            }
+            animReqFish = requestAnimFrame(doMove);
+        };
+
+        stopRequestAnimFrame(animReqFish);
+        animReqFish = requestAnimFrame(doMove);
     };
 
     this.resize = function() {
