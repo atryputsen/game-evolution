@@ -4,7 +4,7 @@ var Customization = function(){
     function init(){
         initCanvas();
         initItems();
-
+        AudioModule.playIntroSound();
         content.querySelector('button').addEventListener('click', applyChanges);
     }
     function initCanvas(){

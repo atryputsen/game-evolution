@@ -24,6 +24,7 @@ function Render() {
         mapLayer,
 		fishLayer,
         heroLayer,
+        hudLayer,
         effectsLayer;
 
     var mapWidth, mapHeight,
@@ -70,6 +71,19 @@ function Render() {
         ctx = canvas.getContext("2d");
 
         heroLayer = ctx;
+    };
+    this.initHudLayer = function() {
+        var canvas, ctx;
+
+        canvas = document.createElement("canvas");
+        canvas.id = "hudLayer";
+        canvas.height = mapHeight;
+        canvas.width = mapWidth;
+        container.appendChild(canvas);
+
+        ctx = canvas.getContext("2d");
+
+        hudLayer = ctx;
     };
     this.initBackground = function(){
         var canvas, ctx, img, pattern;
@@ -158,7 +172,10 @@ function Render() {
 
         totalLayer.translate(x, y);
         for (var i = 0; i < fish.parts.length; i++) {
-            totalLayer.drawImage(fish.parts[i].image, fish.parts[i].x, fish.parts[i].y, fish.parts[i].width, fish.parts[i].height);
+            totalLayer.drawImage(fish.parts[i].image,
+                0, 0, fish.parts[i].width, fish.parts[i].height,
+                fish.parts[i].x, fish.parts[i].y, fish.parts[i].width, fish.parts[i].height
+            );
         }
 
         totalLayer.save();
@@ -199,6 +216,34 @@ function Render() {
                     (viewportHeight - (mapHeight - hero.y)) :
                     centerViewportY)
         };
+    };
+
+    this.healthDisplay = function (health) {
+        hudLayer.clearRect(0, 0, hudLayer.canvas.width, 20);
+        hudLayer.font = "bold 18px Arial";
+        hudLayer.fillText("Life Remaining:"+health, 80, 20);
+    };
+    this.fishesCounterDisplay = function (count) {
+        hudLayer.clearRect(0, 40, hudLayer.canvas.width, 40);
+        hudLayer.font = "bold 18px Arial";
+        hudLayer.fillText("Fishes Remaining:"+count, 80, 60);
+    };
+    this.timeDisplay = function (count) {
+        hudLayer.clearRect(0, 60, hudLayer.canvas.width, 60);
+        hudLayer.font = "bold 18px Arial";
+        hudLayer.fillText("Time Remaining:"+count, 80, 100);
+    };
+    this.gameOverDisplay = function () {
+        hudLayer.clearRect(0, 0, hudLayer.canvas.width, hudLayer.canvas.height);
+        hudLayer.fillStyle = "rgba(0, 0, 255, 1)";
+        hudLayer.font = "bold 84px Arial";
+        hudLayer.fillText("Game Over", 80, 100);
+    };
+    this.finishDisplay = function () {
+        hudLayer.clearRect(0, 0, hudLayer.canvas.width, hudLayer.canvas.height);
+        hudLayer.fillStyle = "rgba(0, 0, 255, 1)";
+        hudLayer.font = "bold 84px Arial";
+        hudLayer.fillText("Success", 80, 100);
     };
 
     this.effect = function (x, y){
@@ -273,8 +318,6 @@ function Render() {
         var elementStyle = layer.canvas.style,
             transformValue = 'matrix(1, 0, 0, 1, ' + -layerStartX + ', ' + -layerStartY + ')';
 
-        /*elementStyle.top = -layerStartX + "px";
-         elementStyle.left = -layerStartY + "px";*/
         elementStyle.webkitTransform = transformValue;
         elementStyle.MozTransform = transformValue;
         elementStyle.msTransform = transformValue;

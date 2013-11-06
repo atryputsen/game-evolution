@@ -1,12 +1,26 @@
 function Main() {
-	var render = null,
+    var render = null,
         mapInfo,
         mapArray = [],
         fishes = [],
         hero,
         animReqHero,
-        animReqFish;
+        animReqFish,
+        finishGameTime,
+        timerVar,
+        finishEvent;
 
+    function timer(){
+        finishGameTime--;
+        if(finishGameTime==0){
+            render.gameOverDisplay();
+            document.dispatchEvent(finishEvent);
+            setTimeout(function(){},1000);
+        } else{
+            render.timeDisplay(finishGameTime);
+            timerVar = setTimeout(timer,1000);
+        }
+    }
     function initBarriers(){
         var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
             width = Math.floor(mapInfo.map.width / mapInfo.barrier.width),
@@ -14,19 +28,19 @@ function Main() {
             count = Math.ceil(height * width * percentage / 100),
             i, j, l;
 
-        for (j = 0; j < height; j++){
+        for (j = 0; j < height; j++) {
             var tempArray = [];
-            for (i = 0; i < width; i++){
+            for (i = 0; i < width; i++) {
                 tempArray.push(0);
             }
             mapArray.push(tempArray);
         }
-        var lenW = width-1;
-        var lenH = height-1;
-        for (j = 0; j < height; j++){
+        var lenW = width - 1;
+        var lenH = height - 1;
+        for (j = 0; j < height; j++) {
             mapArray[j][0] = 1;
             mapArray[j][lenW] = 1;
-            for (i = 0; i < width; i++){
+            for (i = 0; i < width; i++) {
                 mapArray[0][i] = 1;
                 mapArray[lenH][i] = 1;
             }
@@ -35,27 +49,39 @@ function Main() {
         for (l = 0; l < count; l++){
             i = Math.floor(Math.random() * (width-1));
             j = Math.floor(Math.random() * (height-1));
-
-            mapArray[j][i] = 1;
+            if (j != height/2 && i != width/2) {
+                mapArray[j][i] = 1;
+            }
         }
     }
-	function initFishes() {
-		var fishesCount = mapInfo.levels[0].fishes;
-        for(var i = 0; i < fishesCount; i++) {
-            var fish = new Fish(
-                Math.round(mapInfo.map.width * Math.random()),
-                Math.round(mapInfo.map.height * Math.random()),
-                fishInfoGlobal.fishes[i]
-            );
+    function generateRandomPositionFish(i) {
+        var fish = new Fish(
+            Math.round(mapInfo.map.width / 2) - 1000 * Math.random(),
+            Math.round(mapInfo.map.height / 2) - 1000 * Math.random(),
+            fishInfoGlobal.fishes[i]
+        );
+        return fish;
+    }
+    function initFishes() {
+        var fishesCount = mapInfo.levels[0].fishes;
+        for (var i = 0; i < fishesCount; i++) {
+            var fish = generateRandomPositionFish(i);
+            while (checkWallCollision(fish)) {
+                fish = generateRandomPositionFish(i);
+            }
             fishes.push(fish);
         }
-	}
+    }
     function initHero() {
         hero = new Fish(
             Math.round(mapInfo.map.width / 2),
             Math.round(mapInfo.map.height / 2),
             fishInfoGlobal.hero
         );
+    }
+    function initTimer() {
+        finishGameTime = mapInfo.levels[0].timer;
+        timerVar = setTimeout(timer,1000);
     }
     function renderAll(){
         render = new Render(mapInfo.map.width, mapInfo.map.height, window.innerWidth, window.innerHeight, {
@@ -67,6 +93,7 @@ function Main() {
         render.initBackground();
         render.initMapLayer();
         render.initFishLayer();
+        render.initHudLayer();
         render.initHeroLayer(hero.width, hero.height);
         render.initEffectLayer();
 
@@ -76,30 +103,78 @@ function Main() {
         }
         render.drawHero(hero);
     }
-	function init() {
+    function init() {
         mapInfo = mapInfoGlobal;
         initBarriers();
-		initFishes();
+        initFishes();
         initHero();
+        AudioModule.playBackgroundMusic();
+
+        finishEvent = document.createEvent('Events');
+        finishEvent.initEvent('end');
+        document.addEventListener('end', function(){
+            stopRequestAnimFrame(animReqHero);
+            stopRequestAnimFrame(animReqFish);
+            AudioModule.stopFishMoveSound();
+        });
 
         renderAll();
+        initTimer();
 	}
 
-    function checkCollision(vertexs, checkHero) {
-        var matrixCollision = false, x, y;
-        for(var j = 0; j < vertexs.length; j++) {
-            x = Math.floor(vertexs[j][0]/ mapInfo.barrier.width);
-            y = Math.floor(vertexs[j][1]/ mapInfo.barrier.height);
-            if (mapArray[y][x]){
-                //console.log('collision');
+    function checkWallCollision(fish) {
+        var vertexs = fish.vertexes,
+            matrixCollision = false,
+            x, y;
+        for (var j = 0; j < vertexs.length; j++) {
+            x = Math.floor(vertexs[j][0] / mapInfo.barrier.width);
+            y = Math.floor(vertexs[j][1] / mapInfo.barrier.height);
+            if (mapArray[y][x]) {
                 matrixCollision = true;
-                return matrixCollision;
+                break;
             }
+        }
+        return matrixCollision;
+    }
+    function checkCollision(fish, isHero) {
+        var vertexs = fish.vertexes;
+
+        var matrixCollision = checkWallCollision(fish);
+        if (matrixCollision){
+            return matrixCollision;
         }
 
         var fishCollision = false, collisionSat;
-
-        if (!checkHero) {
+        if (isHero) {
+            for(var i = 0; i < fishes.length; i++) {
+                fishes[i].vertexes = collisionLib.vert.convertSquare(fishes[i]);
+                collisionSat = collisionLib.vert.sat(vertexs, fishes[i].vertexes);
+                if (collisionSat) {
+                    AudioModule.playFishCollisionSound();
+                    fishes[i].health = fishes[i].health - hero.damage;
+                    if (fish.animation_eat){
+                        fish.animation_eat_index = (fish.animation_eat_index + 1) % fish.animation_eat.length || 0;
+                        var sprite = fish.sprites.getOffset(fish.animation_eat[fish.animation_eat_index]);
+                        fish.x = sprite.x;
+                        fish.y = sprite.y;
+                    }
+                    render.healthDisplay(fishes[i].health);
+                    if (fishes[i].health <= 0) {
+                        AudioModule.playCollisionSound();
+                        fishes.splice(i, 1);
+                    }
+                    render.fishesCounterDisplay(fishes.length);
+                    if (fishes.length <= 0) {
+                        AudioModule.playSuccessSound();
+                        document.dispatchEvent(finishEvent);
+                        render.finishDisplay();
+                        clearTimeout(timerVar);
+                    }
+                    fishCollision = true;
+                    break;
+                }
+            }
+        } else {
             hero.vertexes = collisionLib.vert.convertSquare(hero);
             collisionSat = collisionLib.vert.sat(vertexs, hero.vertexes);
             if (collisionSat) {
@@ -107,19 +182,9 @@ function Main() {
                 fishCollision = true;
                 return fishCollision;
             }
-        } else {
-            for(var i = 0; i < fishes.length; i++) {
-                fishes[i].vertexes = collisionLib.vert.convertSquare(fishes[i]);
-                collisionSat = collisionLib.vert.sat(vertexs, fishes[i].vertexes);
-                if (collisionSat) {
-                    //console.log('collisionSat');
-                    fishCollision = true;
-                    return fishCollision;
-                }
-            }
         }
 
-        return false;
+        return fishCollision;
     }
     function countMoveStep(fish, wayX, wayY){
         var way,
@@ -129,14 +194,13 @@ function Main() {
 
         way = Math.sqrt(wayX * wayX + wayY * wayY);
         steps = way / fish.speed;
-
         deltaX = wayX / steps;
         deltaY = wayY / steps;
 
         angle = Math.atan2(wayX, -wayY) * 180 / Math.PI;
         if (angle - fish.angle > 180) {
             fish.angle += 360
-        } else if (angle - fish.angle < -180){
+        } else if (angle - fish.angle < -180) {
             fish.angle -= 360;
         }
         deltaSign = (angle - fish.angle > 0) ? 1 : -1;
@@ -172,7 +236,7 @@ function Main() {
             if (cloneFish.parts.length > 0) {
                 for (var i = 0; i < cloneFish.parts.length; i++) {
                     cloneFish.parts[i].vertexes = collisionLib.vert.convertSquare( cloneFish.getPartInfo(cloneFish.parts[i]) );
-                    if (checkCollision(cloneFish.parts[i].vertexes, options.checkHero)) {
+                    if (checkCollision(cloneFish.parts[i], options.isHero)) {
                         //console.log('collision ' + cloneFish.parts[i].type);
                     } else {
                         //render.effect(cloneFish.x, cloneFish.y);
@@ -181,7 +245,7 @@ function Main() {
             }
 
             cloneFish.vertexes = collisionLib.vert.convertSquare( cloneFish );
-            if (!checkCollision(cloneFish.vertexes, options.checkHero)) {
+            if (!checkCollision(cloneFish, options.isHero)) {
                 //console.log('collision body');
                 fish.x = cloneFish.x;
                 fish.y = cloneFish.y;
@@ -191,6 +255,10 @@ function Main() {
 
             options.step++;
             delete cloneFish;
+        } else {
+            if (options.isHero){
+                AudioModule.stopFishMoveSound();
+            }
         }
 
         drawFunction.call(render, fish);
@@ -233,7 +301,7 @@ function Main() {
         }
 
         options = countMoveStep(hero, deltaX * 10, deltaY * 10);
-        options.checkHero = true;
+        options.isHero = true;
 
         var doMove = function(){
             stopRequestAnimFrame(animReqHero);
@@ -250,9 +318,10 @@ function Main() {
             wayY = clientY - position.y,
             options = countMoveStep(hero, wayX, wayY);
 
-        options.checkHero = true;
+        options.isHero = true;
         var doMove = function(){
             stopRequestAnimFrame(animReqHero);
+            AudioModule.playFishMoveSound();
             nextMoveStep(hero, render.drawHero, options);
             animReqHero = requestAnimFrame(doMove);
         };
@@ -263,17 +332,17 @@ function Main() {
     this.fishMoveTo = function(){
         var wayX, wayY, options = new Array(5);
 
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < fishes.length; i++) {
             wayX = Math.floor((Math.random() - 0.5) * window.innerWidth);
             wayY = Math.floor((Math.random() - 0.5) * window.innerHeight);
             options[i] = countMoveStep(fishes[i], wayX, wayY);
-            options[i].checkHero = false;
+            options[i].isHero = false;
         }
 
         var doMove = function(){
             stopRequestAnimFrame(animReqFish);
             render.clearFishLayer();
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < fishes.length; i++) {
                 nextMoveStep(fishes[i], render.drawFish, options[i]);
             }
             animReqFish = requestAnimFrame(doMove);

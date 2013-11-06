@@ -1,7 +1,10 @@
 (function() {
+    var fishInterval;
+
     window.onload = function(){
         var customization = new Customization();
         document.addEventListener('customization.done', init);
+        document.addEventListener('end', clear);
     };
 
     function init() {
@@ -55,7 +58,15 @@
         };
 
         app = new Main();
-        setInterval(app.fishMoveTo, 3000);
+        fishInterval = setInterval(app.fishMoveTo, 3000);
         container.classList.remove('hidden');
+    }
+
+    function clear(){
+        window.onresize = null;
+        window.onkeydown = null;
+        window.onkeyup = null;
+        window.onmousedown = null;
+        clearInterval(fishInterval);
     }
 })();

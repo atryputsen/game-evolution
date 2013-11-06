@@ -10,11 +10,12 @@ var mapInfoGlobal = {
         "src": 'data/img/barrier/1.png'
     },
     "parallax": {
-        "footer": 0.3,
+        "footer": 1,
         "effects": 1.5
     },
 	"levels": [{
 		"barriers": 5,
-		"fishes": 5
+		"fishes": 5,
+        "timer": 20
 	}]
 };
