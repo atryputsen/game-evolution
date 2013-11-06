@@ -206,10 +206,13 @@ function Main() {
                 if (collisionSat) {
                     AudioModule.playFishCollisionSound();
                     fishes[i].health = fishes[i].health - hero.damage;
-                    /*if (fishPart.animation_eat){
+                    if (fishPart.animation_eat && !fishPart.timeout){
+                      fishPart.timeout = setTimeout(function(){
                         fishPart.animation_eat_index = (fishPart.animation_eat_index + 1) % fishPart.animation_eat.length || 0;
                         fishPart.sprite = fishPart.sprites.getOffset(fishPart.animation_eat[fishPart.animation_eat_index]);
-                    }*/
+                        clearTimeout(fishPart.timeout);
+                      },200);
+                    }
                     render.healthDisplay(fishes[i].health);
                     if (fishes[i].health <= 0) {
                         AudioModule.playCollisionSound();
