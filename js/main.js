@@ -206,11 +206,10 @@ function Main() {
                 if (collisionSat) {
                     AudioModule.playFishCollisionSound();
                     fishes[i].health = fishes[i].health - hero.damage;
-                    if (fishPart.animation_eat){
-                        console.log('animation_eat')
+                    /*if (fishPart.animation_eat){
                         fishPart.animation_eat_index = (fishPart.animation_eat_index + 1) % fishPart.animation_eat.length || 0;
-                        fishPart.sprite = fishPart.sprites.getOffset(fishPart.animation_eat[fishPart.animation_eat_index], fishPart.sprites);
-                    }
+                        fishPart.sprite = fishPart.sprites.getOffset(fishPart.animation_eat[fishPart.animation_eat_index]);
+                    }*/
                     render.healthDisplay(fishes[i].health);
                     if (fishes[i].health <= 0) {
                         AudioModule.playCollisionSound();

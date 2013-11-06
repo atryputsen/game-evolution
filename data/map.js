@@ -16,6 +16,6 @@ var mapInfoGlobal = {
 	"levels": [{
 		"barriers": 5,
 		"fishes": 5,
-        "timer": 120
+        "timer": 20
 	}]
 };
