@@ -1,5 +1,5 @@
 var Sprites = function() {
-    this.init(arguments);
+    this.init(arguments[0]);
 };
 
 Sprites.prototype = {
@@ -19,8 +19,8 @@ Sprites.prototype = {
 
             if(sprite.name == spriteName) {
                 return {
-                    x: sprite.x||0,
-                    y: sprite.y||0,
+                    x: (sprite.x * this._width) || 0,
+                    y: (sprite.y * this._height) || 0,
                     width: this._width,
                     height: this._height
                 };

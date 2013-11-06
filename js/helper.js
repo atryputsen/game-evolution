@@ -1,3 +1,22 @@
+var requestAnimFrame = (function() {
+    return window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame || 
+		window.mozRequestAnimationFrame || 
+		window.oRequestAnimationFrame || 
+		window.msRequestAnimationFrame ||
+		function(callback) {
+			window.setTimeout(callback, 1000 / 60);
+		};
+})();
+var stopRequestAnimFrame = (function() {
+    return window.cancelAnimationFrame ||
+        window.webkitCancelAnimationFrame ||
+        window.mozCancelAnimationFrame ||
+        window.oCancelAnimationFrame ||
+        window.msCancelAnimationFrame ||
+        window.clearTimeout;
+})();
+
 function clone(obj) {
     if (null == obj || "object" != typeof obj) return obj;
     var copy = new obj.constructor();

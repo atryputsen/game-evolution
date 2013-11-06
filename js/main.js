@@ -1,5 +1,5 @@
 /**
- * The main module where initialize all data and send request to main functionality - render, chech collistions, play sound.
+ * The main module initialize all data and send request to main functionality - render, chech collistions, play sound.
  * @private {Object} render The render module instance
  * @private {Object} mapInfo Info about map that contains width, height, barrier percentage, barrier height and width, parralax values, timer value
  * @private {Array.<boolean>} mapArray The map table that provide information about barrier in map cell

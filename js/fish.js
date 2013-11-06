@@ -28,7 +28,10 @@ function Fish (){
                     case 'tail':
                         item.image = new Image();
                         item.image.src = item.src;
-                        item.sprites = new Sprites(item.sprites);
+                        item.sprites = new Sprites(item);
+                        if (item.sprites && !item.sprites.length) {
+                          item.sprite = item.sprites[0];
+                        }
                         break;
                     case 'fin':
                     case 'horn':
