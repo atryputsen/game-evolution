@@ -1,3 +1,16 @@
+/**
+ * The main module where initialize all data and send request to main functionality - render, chech collistions, play sound.
+ * @private {Object} render The render module instance
+ * @private {Object} mapInfo Info about map that contains width, height, barrier percentage, barrier height and width, parralax values, timer value
+ * @private {Array.<boolean>} mapArray The map table that provide information about barrier in map cell
+ * @private {Array.<Object>} fishes The fish instances
+ * @private {Object} hero The hero instance
+ * @private {number} animReqHero Hero animation request that provide animation index for hero
+ * @private {number} animReqFish Fish animation request that provide animation index for all fishes
+ * @private {number} finishGameTime The game left time 
+ * @private {number} timerVar SetTimeout instance for timer
+ * @private {Event} finishEvent Event that will be execute after game is finished
+ */
 function Main() {
     var render = null,
         mapInfo,
@@ -10,61 +23,79 @@ function Main() {
         timerVar,
         finishEvent;
 
+    /**
+     * Check if time is out. If yes - show message and unsibsribe all events
+     */
     function timer(){
         finishGameTime--;
         if(finishGameTime==0){
             render.gameOverDisplay();
             document.dispatchEvent(finishEvent);
-            setTimeout(function(){},1000);
         } else{
             render.timeDisplay(finishGameTime);
             timerVar = setTimeout(timer,1000);
         }
     }
+    /**
+     * Check if time is out. If yes - show message and unsibsribe all events
+     * @private {number} _height The count of map row
+     * @private {number} _width The count of map column
+     * @private {number} _percentage The percentage of barriers on the map
+     * @private {number} _count The count of barriers on the map
+     */
     function initBarriers(){
-        var height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
-            width = Math.floor(mapInfo.map.width / mapInfo.barrier.width),
-            percentage = mapInfo.levels[0].barriers,
-            count = Math.ceil(height * width * percentage / 100),
+        var _height = Math.floor(mapInfo.map.height / mapInfo.barrier.height),
+            _width = Math.floor(mapInfo.map.width / mapInfo.barrier.width),
+            _percentage = mapInfo.levels[0].barriers,
+            _count = Math.ceil(_height * _width * _percentage / 100),
             i, j, l;
 
-        for (j = 0; j < height; j++) {
+        for (j = 0; j < _height; j++) {
             var tempArray = [];
-            for (i = 0; i < width; i++) {
+            for (i = 0; i < _width; i++) {
                 tempArray.push(0);
             }
             mapArray.push(tempArray);
         }
-        var lenW = width - 1;
-        var lenH = height - 1;
-        for (j = 0; j < height; j++) {
+        var lenW = _width - 1;
+        var lenH = _height - 1;
+        for (j = 0; j < _height; j++) {
             mapArray[j][0] = 1;
             mapArray[j][lenW] = 1;
-            for (i = 0; i < width; i++) {
+            for (i = 0; i < _width; i++) {
                 mapArray[0][i] = 1;
                 mapArray[lenH][i] = 1;
             }
         }
 
-        for (l = 0; l < count; l++){
-            i = Math.floor(Math.random() * (width-1));
-            j = Math.floor(Math.random() * (height-1));
-            if (j != height/2 && i != width/2) {
+        for (l = 0; l < _count; l++){
+            i = Math.floor(Math.random() * (_width - 1));
+            j = Math.floor(Math.random() * (_height - 1));
+            if (j != _height / 2 && i != _width / 2) {
                 mapArray[j][i] = 1;
             }
         }
     }
+    /**
+     * Generate random position fish on the map
+     * @param {number} i The fish index
+     * @return {number} Fish instance
+     */
     function generateRandomPositionFish(i) {
-        var fish = new Fish(
+        var _fish = new Fish(
             Math.round(mapInfo.map.width / 2) - 1000 * Math.random(),
             Math.round(mapInfo.map.height / 2) - 1000 * Math.random(),
             fishInfoGlobal.fishes[i]
         );
-        return fish;
+        return _fish;
     }
+    /**
+     * Initialize fish instance array
+     * @private {number} _fishesCount The fish count on the map
+     */
     function initFishes() {
-        var fishesCount = mapInfo.levels[0].fishes;
-        for (var i = 0; i < fishesCount; i++) {
+        var _fishesCount = mapInfo.levels[0].fishes;
+        for (var i = 0; i < _fishesCount; i++) {
             var fish = generateRandomPositionFish(i);
             while (checkWallCollision(fish)) {
                 fish = generateRandomPositionFish(i);
@@ -72,6 +103,9 @@ function Main() {
             fishes.push(fish);
         }
     }
+    /**
+     * Initialize hero instance in the center of the map
+     */
     function initHero() {
         hero = new Fish(
             Math.round(mapInfo.map.width / 2),
@@ -79,10 +113,16 @@ function Main() {
             fishInfoGlobal.hero
         );
     }
+    /**
+     * Set up timer
+     */
     function initTimer() {
         finishGameTime = mapInfo.levels[0].timer;
         timerVar = setTimeout(timer,1000);
     }
+    /**
+     * Execute all initialize fucntions from render module and draw all fishes
+     */
     function renderAll(){
         render = new Render(mapInfo.map.width, mapInfo.map.height, window.innerWidth, window.innerHeight, {
             backgroundImg: mapInfo.map.src,
@@ -103,6 +143,9 @@ function Main() {
         }
         render.drawHero(hero);
     }
+    /**
+     * Execute all initialize fucntions from total module, create finial event
+     */
     function init() {
         mapInfo = mapInfoGlobal;
         initBarriers();
@@ -122,8 +165,13 @@ function Main() {
         initTimer();
 	}
 
-    function checkWallCollision(fish) {
-        var vertexs = fish.vertexes,
+    /**
+     * Check collision between fish and barriers
+     * @param {Object} fishPart The fish body part (body, mouth, fin, etc.) that will be checked for collision
+     * @return {boolean} Boolean value if collision was
+     */
+    function checkWallCollision(fishPart) {
+        var vertexs = fishPart.vertexes,
             matrixCollision = false,
             x, y;
         for (var j = 0; j < vertexs.length; j++) {
@@ -136,10 +184,16 @@ function Main() {
         }
         return matrixCollision;
     }
-    function checkCollision(fish, isHero) {
-        var vertexs = fish.vertexes;
+    /**
+     * Check collision between fish and barriers, between fish and other fishes
+     * @param {Object} fishPart The fish body part (body, mouth, fin, etc.) that will be checked for collision
+     * @param {boolean} isHero The boolean value that is true if we check our hero to other fishes. If we check fish we check collisions only with hero
+     * @return {boolean} Boolean value if collision was
+     */
+    function checkCollision(fishPart, isHero) {
+        var vertexs = fishPart.vertexes;
 
-        var matrixCollision = checkWallCollision(fish);
+        var matrixCollision = checkWallCollision(fishPart);
         if (matrixCollision){
             return matrixCollision;
         }
@@ -152,12 +206,10 @@ function Main() {
                 if (collisionSat) {
                     AudioModule.playFishCollisionSound();
                     fishes[i].health = fishes[i].health - hero.damage;
-                    if (fish.animation_eat){
-                        fish.animation_eat_index = (fish.animation_eat_index + 1) % fish.animation_eat.length || 0;
-                        var sprite = fish.sprites.getOffset(fish.animation_eat[fish.animation_eat_index]);
-                        fish.x = sprite.x;
-                        fish.y = sprite.y;
-                    }
+                    /*if (fishPart.animation_eat){
+                        fishPart.animation_eat_index = (fishPart.animation_eat_index + 1) % fishPart.animation_eat.length || 0;
+                        fishPart.sprite = fishPart.sprites.getOffset(fishPart.animation_eat[fishPart.animation_eat_index]);
+                    }*/
                     render.healthDisplay(fishes[i].health);
                     if (fishes[i].health <= 0) {
                         AudioModule.playCollisionSound();
@@ -165,10 +217,12 @@ function Main() {
                     }
                     render.fishesCounterDisplay(fishes.length);
                     if (fishes.length <= 0) {
-                        AudioModule.playSuccessSound();
-                        document.dispatchEvent(finishEvent);
-                        render.finishDisplay();
                         clearTimeout(timerVar);
+                        setTimeout(function(){
+                          AudioModule.playSuccessSound();
+                          document.dispatchEvent(finishEvent);
+                          render.finishDisplay();
+                        },1000);
                     }
                     fishCollision = true;
                     break;
@@ -186,6 +240,19 @@ function Main() {
 
         return fishCollision;
     }
+    /**
+     * Count values of fish movement
+     * @param {Object} fish The fish instance
+     * @param {number} wayX The x offset between current position and destination one
+     * @param {number} wayY The y offset between current position and destination one
+     * @private {number} way The offset between current position and destination one
+     * @private {number} deltaX The x distance for one fish step
+     * @private {number} deltaY The y distance for one fish step
+     * @private {number} angle The offset between current angle and destination one
+     * @private {number} deltaSign The value that provide information about rotate direction
+     * @private {number} steps The count of steps between current position and destination one
+     * @return {Object} Information about total movement
+     */
     function countMoveStep(fish, wayX, wayY){
         var way,
             deltaX, deltaY,
@@ -214,6 +281,13 @@ function Main() {
             deltaSign: deltaSign
         }
     }
+    /**
+     * Count values of fish movement
+     * @param {Object} fish The fish instance
+     * @param {Function} drawFunction The function that will be executed to draw our fish
+     * @param {Object} options Information about total movement from countMoveStep funtion
+     * @return {Object} Information about total movement
+     */
     function nextMoveStep(fish, drawFunction, options){
         var step = options.step,
             steps = options.steps,
@@ -264,6 +338,10 @@ function Main() {
         drawFunction.call(render, fish);
     }
 
+    /**
+     * Init hero animation request for movement in some direction
+     * @param {string} direction The direction value
+     */
     this.moveDirection = function(direction) {
         var deltaX = 0,
             deltaY = 0,
@@ -312,6 +390,11 @@ function Main() {
         stopRequestAnimFrame(animReqHero);
         animReqHero = requestAnimFrame(doMove);
     };
+    /**
+     * Init hero animation request for movement to some point
+     * @param {number} clientX The x destination point on the viewport
+     * @param {number} clientY The y destination point on the viewport
+     */
     this.heroMoveTo = function(clientX, clientY) {
         var position = render.positionHeroOnScreen(hero),
             wayX = clientX - position.x,
@@ -329,6 +412,9 @@ function Main() {
         stopRequestAnimFrame(animReqHero);
         animReqHero = requestAnimFrame(doMove);
     };
+    /**
+     * Init fish animation request for movement all fishs to some random points
+     */
     this.fishMoveTo = function(){
         var wayX, wayY, options = new Array(5);
 
